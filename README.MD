@@ -10,5 +10,5 @@ ADD SWAP RAM 1GB
  
  INSTALL FAIL2BAN (BLOCK SPAM SSH)
   ```html
- wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh.sh && ./fail2ban.sh.sh
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
  ```
