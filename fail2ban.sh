@@ -9,7 +9,7 @@ sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sudo sed -i '/^\[sshd\]$/,/^\[/ s/enabled = .*/enabled = true/' /etc/fail2ban/jail.local
 
 # Atur waktu blokir dan jumlah percobaan
-sudo sed -i '/^\[sshd\]$/,/^\[/ s/maxretry = .*/maxretry = 3/' /etc/fail2ban/jail.local
+sudo sed -i '/^\[sshd\]$/,/^\[/ s/maxretry = .*/maxretry = 1/' /etc/fail2ban/jail.local
 sudo sed -i '/^\[sshd\]$/,/^\[/ s/bantime = .*/bantime = 3600/' /etc/fail2ban/jail.local
 
 # Restart Fail2Ban
