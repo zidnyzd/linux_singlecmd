@@ -12,3 +12,8 @@ ADD SWAP RAM 1GB
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
  ```
+
+  INSTALL SSSSS
+  ```html
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
+ ```
