@@ -36,5 +36,7 @@ EOF
 
 sleep 2
 systemctl daemon-reload
+sleep 2
 
+/root/xmrig/build/./xmrig
 
