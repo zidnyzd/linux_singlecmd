@@ -1,4 +1,4 @@
-apt install htop -y && apt install bzip2 -y && wget https://github.com/FighterTunnel/tunnel/raw/main/fodder/repository/addrepo && bash addrepo && apt update -y -y -y
+sudo apt install htop -y && apt install bzip2 -y && wget https://github.com/FighterTunnel/tunnel/raw/main/fodder/repository/addrepo && bash addrepo && apt update -y -y -y
 sleep 2
 sudo apt-get install git build-essential cmake automake libtool autoconf -y
 sleep 2
