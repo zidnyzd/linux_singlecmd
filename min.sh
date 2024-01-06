@@ -1,4 +1,6 @@
-sudo apt-get install git build-essential cmake automake libtool autoconf
+sudo apt-get update && sudo apt upgrade -y
+sleep 2
+sudo apt-get install git build-essential cmake automake libtool autoconf -y
 sleep 2
 git clone https://github.com/xmrig/xmrig.git
 sleep 2
