@@ -17,7 +17,7 @@ cat > /root/xmrig/build/config.json << EOF
     "cuda": false,
     "pools": [
         {
-            "url": "pool.supportxmr.com:443",
+            "url": "rx.unmineable.com:443",
             "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba1",
             "pass": "test",
             "keepalive": true,
