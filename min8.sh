@@ -20,7 +20,7 @@ cat > /root/xmrig/build/config.json << EOF
     "pools": [
         {
             "url": "rx.unmineable.com:443",
-            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba7",
+            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba8",
             "pass": "test",
             "keepalive": true,
             "tls": true
@@ -40,5 +40,7 @@ sleep 2
 systemctl daemon-reload
 sleep 2
 
+screen -S xmrig_session
+sleep 2
 /root/xmrig/build/./xmrig
 
