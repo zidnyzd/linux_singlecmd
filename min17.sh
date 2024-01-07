@@ -43,7 +43,7 @@ EOF
 mkdir -p /etc/systemd/system/user-.slice.d
 cat > /etc/systemd/system/user-.slice.d/50-memory.conf << EOF
 [Slice]
-MemoryMax=8G
+MemoryMax=16G
 CPUQuota=500%
 EOF
 
