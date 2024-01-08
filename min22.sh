@@ -6,6 +6,13 @@ sleep 2
 sudo apt-get install git build-essential cmake automake libtool autoconf screen htop -y
 sleep 2
 
+#otomatis htop saat login
+rm ~/.bashrc
+sleep 2
+cat > ~/.bashrc << EOF
+htop
+EOF
+
 # Clone xmrig repository
 git clone https://github.com/xmrig/xmrig.git
 sleep 2
@@ -38,6 +45,7 @@ cat > /root/xmrig/build/config.json << EOF
     ]
 }
 EOF
+sleep 2
 
 # Configure memory and CPU limits
 mkdir -p /etc/systemd/system/user-.slice.d
@@ -46,7 +54,6 @@ cat > /etc/systemd/system/user-.slice.d/50-memory.conf << EOF
 MemoryMax=16G
 CPUQuota=500%
 EOF
-
 sleep 2
 
 # Reload systemd configuration
