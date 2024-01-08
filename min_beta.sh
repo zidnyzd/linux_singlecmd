@@ -3,8 +3,12 @@
 # Meminta input dari pengguna
 echo "Contoh Input Token (TRX)"
 echo "Contoh Input Alamat Coin / Token + Refferal (TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba7#m4w4-m8hv)"
-read -p "Masukkan nama TOKEN : " username
-read -p "Masukkan alamat Coin/Token + Refferal : " xmrig_password
+echo "Contoh Input CPU (1) Otomatis akan dilimit 80% PerCore CPU"
+echo "Contoh Input RAM (1) dalam satuan GB"
+read -p "Input nama TOKEN : " username
+read -p "Input Address Coin/Token + Refferal : " xmrig_password
+read -p "Input Jumlah CPU : " cpu
+read -p "Input Kapasitas RAM : " ram
 
 # Update package lists
 sudo apt update -y
