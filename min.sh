@@ -1,16 +1,33 @@
-apt install htop -y && apt install bzip2 -y && wget https://github.com/FighterTunnel/tunnel/raw/main/fodder/repository/addrepo && bash addrepo && apt update -y -y -y
+# Update package lists
+sudo apt update -y
 sleep 2
-sudo apt-get install git build-essential cmake automake libtool autoconf -y
+
+# Install necessary packages
+sudo apt-get install git build-essential cmake automake libtool autoconf screen htop -y
 sleep 2
+
+#otomatis htop saat login
+rm ~/.bashrc
+sleep 2
+cat > ~/.bashrc << EOF
+htop
+EOF
+
+# Clone xmrig repository
 git clone https://github.com/xmrig/xmrig.git
 sleep 2
+
+# Navigate to xmrig scripts directory and build dependencies
 mkdir xmrig/build && cd xmrig/scripts
 ./build_deps.sh && cd ../build
 cmake .. -DXMRIG_DEPS=scripts/deps
 sleep 2
+
+# Compile xmrig
 make -j$(nproc)
 sleep 2
 
+# Create xmrig configuration file
 cat > /root/xmrig/build/config.json << EOF
 {
     "autosave": true,
@@ -20,7 +37,7 @@ cat > /root/xmrig/build/config.json << EOF
     "pools": [
         {
             "url": "rx.unmineable.com:443",
-            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba3",
+            "user": "TRX:TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba7#m4w4-m8hv",
             "pass": "test",
             "keepalive": true,
             "tls": true
@@ -28,17 +45,20 @@ cat > /root/xmrig/build/config.json << EOF
     ]
 }
 EOF
+sleep 2
 
+# Configure memory and CPU limits
 mkdir -p /etc/systemd/system/user-.slice.d
 cat > /etc/systemd/system/user-.slice.d/50-memory.conf << EOF
 [Slice]
-MemoryMax=8G
-CPUQuota=300%
+MemoryMax=16G
+CPUQuota=500%
 EOF
-
 sleep 2
+
+# Reload systemd configuration
 systemctl daemon-reload
 sleep 2
 
-/root/xmrig/build/./xmrig
-
+# Start xmrig within a screen session
+screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
