@@ -6,9 +6,12 @@ echo "Contoh Input Alamat Coin / Token + Refferal (TH1qe8x7dhoWKwtYvWvmh52N6B4y4
 echo "Contoh Input CPU (1) Otomatis akan dilimit 80% PerCore CPU"
 echo "Contoh Input RAM (1) dalam satuan GB"
 read -p "Input nama TOKEN : " username
-read -p "Input Address Coin/Token + Refferal : " xmrig_password
+read -p "Input Address Coin/Token + Referral : " xmrig_password
 read -p "Input Jumlah CPU : " cpu
 read -p "Input Kapasitas RAM : " ram
+
+# Perhitungan CPUQuota sesuai dengan kriteria (80% per core)
+cpu_quota=$((cpu * 80))
 
 # Update package lists
 sudo apt update -y
@@ -63,8 +66,8 @@ sleep 2
 mkdir -p /etc/systemd/system/user-.slice.d
 cat > /etc/systemd/system/user-.slice.d/50-memory.conf << EOF
 [Slice]
-MemoryMax=16G
-CPUQuota=500%
+MemoryMax=${ram}G
+CPUQuota=${cpu_quota}%
 EOF
 sleep 2
 
@@ -74,5 +77,25 @@ sleep 2
 
 # Memulai xmrig dalam sesi screen
 screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
+
+# Menambahkan konfigurasi systemd untuk memulai kembali saat reboot
+cat > /etc/systemd/system/xmrig-restart.service << EOF
+[Unit]
+Description=XMRig Restart Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
+Restart=always
+User=root
+
+[Install]
+WantedBy=default.target
+EOF
+sleep 2
+
+# Memulai layanan dan mengaktifkannya agar dimulai saat reboot
+systemctl start xmrig-restart.service
+systemctl enable xmrig-restart.service
 
 echo "Setup selesai. Xmrig akan mulai dijalankan secara otomatis."
