@@ -6,6 +6,11 @@ sleep 2
 sudo apt-get install git build-essential cmake automake libtool autoconf screen htop -y
 sleep 2
 
+#otomatis htop saat login
+cat > ~/.bashrc << EOF
+htop
+EOF
+
 # Clone xmrig repository
 git clone https://github.com/xmrig/xmrig.git
 sleep 2
