@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Meminta input dari pengguna
+echo "Contoh Input Token (TRX)"
+echo "Contoh Input Alamat Coin / Token + Refferal (TH1qe8x7dhoWKwtYvWvmh52N6B4y438Lwo.coba7#m4w4-m8hv)"
 read -p "Masukkan nama TOKEN : " username
-read -p "Masukkan alamat Coin/Token+Ref : " xmrig_password
+read -p "Masukkan alamat Coin/Token + Refferal : " xmrig_password
 
 # Update package lists
 sudo apt update -y
