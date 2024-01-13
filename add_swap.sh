@@ -1,9 +1,16 @@
+#!/bin/bash
+
 # Meminta input dari pengguna
-echo "Contoh Input RAM (1) dalam satuan GB"
-read -p "Input Kapasitas Swap RAM : " ram
+read -p "Input Kapasitas Swap RAM (dalam satuan GB): " ram
+
+# Validasi input untuk memastikan hanya angka yang dimasukkan
+if [[ ! "$ram" =~ ^[0-9]+$ ]]; then
+    echo "Input tidak valid. Harap masukkan angka."
+    exit 1
+fi
 
 # Menambah Swap RAM
-sudo fallocate -l 2G /swapfile && ls -lh /swapfile
+sudo fallocate -l "${ram}G" /swapfile && ls -lh /swapfile
 sleep 5
 sudo chmod 600 /swapfile && ls -lh /swapfile
 sleep 5
@@ -19,7 +26,7 @@ sudo sysctl vm.swappiness=10
 sudo sysctl vm.vfs_cache_pressure=50
 
 # Menambahkan parameter ke dalam /etc/sysctl.conf
-echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
-echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf
+echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
+echo "vm.vfs_cache_pressure=50" | sudo tee -a /etc/sysctl.conf
 
-echo "Berhasil Menambah SWAP RAM 2GB"
+echo "Berhasil Menambah SWAP RAM ${ram}GB"
