@@ -1,11 +1,6 @@
-ADD SWAP RAM 1GB 
+ADD SWAP RAM
   ```html
- wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap_1gb.sh && chmod +x add_swap_1gb.sh && ./add_swap_1gb.sh
- ```
-
- ADD SWAP RAM 2GB 
-  ```html
- wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap_2gb.sh && chmod +x add_swap_2gb.sh && ./add_swap_2gb.sh
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap.sh && chmod +x add_swap.sh && ./add_swap.sh
  ```
  
  INSTALL FAIL2BAN (BLOCK SPAM SSH)
@@ -13,7 +8,7 @@ ADD SWAP RAM 1GB
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
  ```
 
-  INSTALL SSSSS
+  INSTALL XM
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
  ```

@@ -1,3 +1,7 @@
+# Meminta input dari pengguna
+echo "Contoh Input RAM (1) dalam satuan GB"
+read -p "Input Kapasitas Swap RAM : " ram
+
 # Menambah Swap RAM
 sudo fallocate -l 2G /swapfile && ls -lh /swapfile
 sleep 5
