@@ -13,7 +13,7 @@ ADD SWAP RAM
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
  ```
 
-   INSTALL XM
+   INSTALL MC
   ```html
- wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
  ```
