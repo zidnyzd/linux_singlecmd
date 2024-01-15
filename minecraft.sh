@@ -1,3 +1,5 @@
+#!/bin/bash
+
 sudo apt update
 
 sudo apt install apt-transport-https software-properties-common gnupg wget
