@@ -12,3 +12,8 @@ ADD SWAP RAM
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
  ```
+
+   INSTALL XM
+  ```html
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
+ ```

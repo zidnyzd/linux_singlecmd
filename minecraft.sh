@@ -16,7 +16,7 @@ cd ~
 mkdir minecraft
 cd minecraft
 
-wget https://launcher.mojang.com/[NEWEST_VERSION]/server.jar
+wget https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar
 sleep 2
 
 nano start.sh
