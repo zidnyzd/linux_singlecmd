@@ -1,4 +1,6 @@
-ADD SWAP RAM
+Fully Automatic Installer
+
+ ADD SWAP RAM
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap.sh && chmod +x add_swap.sh && ./add_swap.sh
  ```
