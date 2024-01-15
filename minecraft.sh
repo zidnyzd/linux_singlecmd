@@ -14,9 +14,6 @@ sleep 2
 sudo apt install openjdk-17-jre-headless
 sleep 2
 
-sudo apt install screen -y
-sleep 2
-
 sudo ufw allow 25565
 sleep 2
 
