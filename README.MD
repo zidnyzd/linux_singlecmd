@@ -10,9 +10,14 @@ Fully Automatic Installer
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
  ```
 
-  INSTALL XM
+  INSTALL XM TLS
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
+ ```
+
+  INSTALL XM NTLS
+  ```html
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/min_alt.sh && chmod +x min_alt.sh && ./min_alt.sh
  ```
 
    INSTALL MC
