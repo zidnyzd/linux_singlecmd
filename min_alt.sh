@@ -78,24 +78,24 @@ sleep 2
 # Memulai xmrig dalam sesi screen
 screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
 
-# # Menambahkan konfigurasi systemd untuk memulai kembali saat reboot
-# cat > /etc/systemd/system/xmrig-restart.service << EOF
-# [Unit]
-# Description=XMRig Restart Service
-# After=network.target
+# Menambahkan konfigurasi systemd untuk memulai kembali saat reboot
+cat > /etc/systemd/system/xmrig-restart.service << EOF
+[Unit]
+Description=XMRig Restart Service
+After=network.target
 
-# [Service]
-# ExecStart=/usr/bin/screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
-# Restart=always
-# User=root
+[Service]
+ExecStart=/usr/bin/screen -S xmrig_session -d -m /root/xmrig/build/./xmrig
+Restart=always
+User=root
 
-# [Install]
-# WantedBy=default.target
-# EOF
-# sleep 2
+[Install]
+WantedBy=default.target
+EOF
+sleep 2
 
-# # Memulai layanan dan mengaktifkannya agar dimulai saat reboot
-# systemctl start xmrig-restart.service
-# systemctl enable xmrig-restart.service
+# Memulai layanan dan mengaktifkannya agar dimulai saat reboot
+systemctl start xmrig-restart.service
+systemctl enable xmrig-restart.service
 
 echo "Setup selesai. Xmrig akan mulai dijalankan secara otomatis."
