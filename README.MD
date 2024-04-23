@@ -29,3 +29,8 @@ Fully Automatic Installer
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
  ```
+
+  INSTALL WARP
+  ```html
+ wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp.sh && chmod +x warp.sh && ./warp.sh
+ ```
