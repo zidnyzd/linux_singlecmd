@@ -25,7 +25,7 @@ Fully Automatic Installer
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
  ```
 
-    INSTALL Repo ID Debian 10 & Ubuntu 20
+  INSTALL Repo ID Debian 10 & Ubuntu 20
   ```html
  wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
  ```
