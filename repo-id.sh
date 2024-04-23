@@ -5,12 +5,13 @@ if grep -q "Debian 10" /etc/os-release; then
     # Debian 10 (Buster)
     echo "Mendeteksi Debian 10 (Buster)"
 
+    sudo apt update
     sudo apt install gnupg -y
     sleep 2
 
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9 6ED0E7B82643E131
     sleep 2
-    apt update
+    sudo apt update
 
     # Hapus file repositori sebelumnya jika sudah ada
     sudo rm -f /etc/apt/sources.list
@@ -29,6 +30,7 @@ EOF
 
 elif grep -q "Ubuntu 20" /etc/os-release; then
     # Ubuntu 20 (Focal Fossa)
+    sudo apt update
     echo "Mendeteksi Ubuntu 20 (Focal Fossa)"
     # Hapus file repositori sebelumnya jika sudah ada
     sudo rm -f /etc/apt/sources.list
@@ -41,6 +43,8 @@ deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-backports main restricted 
 deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-proposed main restricted universe multiverse
 EOF
 '
+    sudo apt update
+    
 else
     echo "Distribusi Linux tidak dikenal."
     exit 1
