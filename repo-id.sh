@@ -18,7 +18,7 @@ EOF
 '
 
     sudo apt update
-    sudo apt install gnupg -y
+    sudo apt install gnupg -y && apt install bzip2 -y && apt install screen -y
     sleep 2
 
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9 6ED0E7B82643E131
