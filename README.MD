@@ -14,13 +14,11 @@ wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod
 +x fail2ban.sh && ./fail2ban.sh
 ```
 
-FIX LowSpec
+FIX LowSpec VPS (Remove DNSTT & OpenVPN)
 
 ````html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x
-fixlow.sh && ./fixlow.sh INSTALL XM TLS ```html wget
-https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh
-&& ./min.sh
+fixlow.sh && ./fixlow.sh INSTALL XM TLS ```
 ````
 
 INSTALL XM NTLS
