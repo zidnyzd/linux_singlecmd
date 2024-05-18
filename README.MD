@@ -18,7 +18,7 @@ FIX LowSpec VPS (Remove DNSTT & OpenVPN)
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x
-fixlow.sh && ./fixlow.sh INSTALL XM TLS
+fixlow.sh && ./fixlow.sh
 ```
 
 INSTALL XM NTLS
