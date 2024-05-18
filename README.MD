@@ -21,11 +21,11 @@ wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x
 fixlow.sh && ./fixlow.sh
 ```
 
-INSTALL XM NTLS
+INSTALL XM
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/min_alt.sh && chmod +x
-min_alt.sh && ./min_alt.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x
+min.sh && ./min.sh
 ```
 
 INSTALL MC
