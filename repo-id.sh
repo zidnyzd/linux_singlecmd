@@ -25,7 +25,7 @@ EOF
     sleep 2
     sudo apt update
 
-    sudo rm -f /etc/apt/sources.list.d/ackports.list
+    sudo rm -f /etc/apt/sources.list.d/backports.list
     sudo bash -c 'cat <<EOF > /etc/apt/sources.list.d/backports.list
 deb http://archive.debian.org/debian buster-backports main contrib non-free
 EOF
