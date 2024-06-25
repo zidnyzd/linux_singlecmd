@@ -41,3 +41,9 @@ INSTALL WARP
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp.sh && chmod +x warp.sh && ./warp.sh
 ```
+
+FIX VNSTAT
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
+```
