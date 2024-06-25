@@ -25,11 +25,47 @@ EOF
     sleep 2
     sudo apt update
 
-    sudo rm -f /etc/apt/sources.list.d/ackports.list
+    sudo rm -f /etc/apt/sources.list.d/backports.list
     sudo bash -c 'cat <<EOF > /etc/apt/sources.list.d/backports.list
 deb http://archive.debian.org/debian buster-backports main contrib non-free
 EOF
 '
+    sudo apt update
+
+# Mendeteksi distribusi Linux
+elif grep -q "VERSION_CODENAME=bullseye" /etc/os-release; then
+    # Debian 10 (Buster)
+    echo 'Mendeteksi Debian 11 (Bullseye)'
+
+
+
+    # Hapus file repositori sebelumnya jika sudah ada
+    sudo rm -f /etc/apt/sources.list
+    # Tambahkan repositori Debian 10 (Buster)
+    sudo bash -c 'cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/debian bullseye main contrib non-free
+deb http://kartolo.sby.datautama.net.id/debian bullseye-updates main contrib non-free
+deb http://kartolo.sby.datautama.net.id/debian-security bullseye-security main contrib non-free
+EOF
+'
+
+    sudo apt update
+    sudo apt install gnupg -y && apt install bzip2 -y && apt install screen -y
+    sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y && sudo apt-get install build-essential python-dev python-setuptools python-pip python-smbus -y && sudo apt-get install libncursesw5-dev libgdbm-dev libc6-dev -y && sudo apt-get install zlib1g-dev libsqlite3-dev tk-dev -y && sudo apt-get install libssl-dev openssl -y
+    
+    sleep 2
+
+    sudo apt-get install libffi-dev -y
+
+#     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9 6ED0E7B82643E131
+#     sleep 2
+#     sudo apt update
+
+#     sudo rm -f /etc/apt/sources.list.d/backports.list
+#     sudo bash -c 'cat <<EOF > /etc/apt/sources.list.d/backports.list
+# deb http://archive.debian.org/debian bullseye-backports main contrib non-free
+# EOF
+# '
     sudo apt update
 
 elif grep -q "VERSION_CODENAME=focal" /etc/os-release; then
