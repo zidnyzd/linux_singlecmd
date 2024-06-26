@@ -11,9 +11,9 @@ if grep -q "VERSION_CODENAME=buster" /etc/os-release; then
     sudo rm -f /etc/apt/sources.list
     # Tambahkan repositori Debian 10 (Buster)
     sudo bash -c 'cat <<EOF > /etc/apt/sources.list
-deb http://kartolo.sby.datautama.net.id/debian/ buster main contrib non-free
-deb http://kartolo.sby.datautama.net.id/debian/ buster-updates main contrib non-free
-deb http://kartolo.sby.datautama.net.id/debian-security/ buster/updates main contrib non-free
+deb http://kebo.vlsm.org/debian/ buster main contrib non-free
+deb http://kebo.vlsm.org/debian/ buster-updates main contrib non-free
+deb http://kebo.vlsm.org/debian-security/ buster/updates main contrib non-free 
 EOF
 '
 
