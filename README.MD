@@ -4,6 +4,7 @@ FIX DEBIAN 11
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixdeb11.sh && chmod +x fixdeb11.sh && ./fixdeb11.sh
+```
 
 ADD SWAP RAM
 
