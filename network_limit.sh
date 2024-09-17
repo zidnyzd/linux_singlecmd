@@ -1,7 +1,5 @@
 #!/bin/bash
 
-cd /usr/local/bin/
-
 # Fungsi untuk mengatur batas penggunaan
 function set_usage_limit() {
   echo "Masukkan batas penggunaan (dalam TB):"
