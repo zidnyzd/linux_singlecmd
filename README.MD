@@ -1,9 +1,9 @@
 Fully Automatic Installer
 
-FIX DEBIAN 11
+NETWORK BANDWITH
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixdeb11.sh && chmod +x fixdeb11.sh && ./fixdeb11.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixdeb11.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
 ```
 
 ADD SWAP RAM
