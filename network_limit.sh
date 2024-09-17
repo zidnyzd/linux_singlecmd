@@ -44,20 +44,21 @@ function set_usage_limit() {
 function reset_usage() {
   echo "Mereset penggunaan jaringan untuk bulan baru..."
 
-  # Menghapus aturan COUNT_TRAFFIC_IN dan COUNT_TRAFFIC_OUT dan membuat ulang untuk reset
-  iptables -D INPUT -i $INTERFACE -j COUNT_TRAFFIC_IN 2>/dev/null
+  # Menghapus aturan COUNT_TRAFFIC_OUT dan membuat ulang untuk reset
   iptables -D OUTPUT -o $INTERFACE -j COUNT_TRAFFIC_OUT 2>/dev/null
-  iptables -F COUNT_TRAFFIC_IN 2>/dev/null
   iptables -F COUNT_TRAFFIC_OUT 2>/dev/null
-  iptables -X COUNT_TRAFFIC_IN 2>/dev/null
   iptables -X COUNT_TRAFFIC_OUT 2>/dev/null
 
-  # Membuat chain baru COUNT_TRAFFIC_IN dan COUNT_TRAFFIC_OUT
-  iptables -N COUNT_TRAFFIC_IN
+  # Membuat chain baru COUNT_TRAFFIC_OUT
   iptables -N COUNT_TRAFFIC_OUT
 
-  # Menambahkan aturan untuk menghitung lalu lintas pada interface tertentu
-  iptables -A INPUT -i $INTERFACE -j COUNT_TRAFFIC_IN
+  # Memeriksa apakah chain berhasil dibuat
+  if ! iptables -L COUNT_TRAFFIC_OUT >/dev/null 2>&1; then
+    echo "Error: Tidak bisa membuat chain COUNT_TRAFFIC_OUT. Periksa konfigurasi iptables."
+    exit 1
+  fi
+
+  # Menambahkan aturan untuk menghitung lalu lintas keluar pada interface tertentu
   iptables -A OUTPUT -o $INTERFACE -j COUNT_TRAFFIC_OUT
 
   echo "Penggunaan jaringan berhasil direset."
@@ -113,34 +114,29 @@ if [ "$CURRENT_DATE" -eq 1 ]; then
   reset_usage
 fi
 
-# Memastikan chain COUNT_TRAFFIC_IN dan COUNT_TRAFFIC_OUT ada sebelum mencoba mendapatkan byte yang digunakan
-iptables -L COUNT_TRAFFIC_IN -v -x > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  echo "Error: Chain COUNT_TRAFFIC_IN tidak ada. Membuat ulang chain..."
-  reset_usage
-fi
-
+# Memastikan chain COUNT_TRAFFIC_OUT ada sebelum mencoba mendapatkan byte yang digunakan
 iptables -L COUNT_TRAFFIC_OUT -v -x > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "Error: Chain COUNT_TRAFFIC_OUT tidak ada. Membuat ulang chain..."
   reset_usage
 fi
 
-# Mendapatkan total byte yang digunakan pada interface dengan iptables (incoming dan outgoing)
-IN_BYTES=$(iptables -L COUNT_TRAFFIC_IN -v -x | grep $INTERFACE | awk '{print $2}')
-OUT_BYTES=$(iptables -L COUNT_TRAFFIC_OUT -v -x | grep $INTERFACE | awk '{print $2}')
+# Mendapatkan total byte yang digunakan pada interface dengan iptables (outgoing)
+OUT_BYTES=$(iptables -L COUNT_TRAFFIC_OUT -v -x | grep "$INTERFACE" | awk '{print $2}')
 
-# Validasi apakah IN_BYTES dan OUT_BYTES berisi nilai numerik
-if ! [[ "$IN_BYTES" =~ ^[0-9]+$ ]] || ! [[ "$OUT_BYTES" =~ ^[0-9]+$ ]]; then
+# Debugging output untuk memastikan nilai yang diambil
+echo "OUT_BYTES: $OUT_BYTES"
+
+# Validasi apakah OUT_BYTES berisi nilai numerik
+if ! [[ "$OUT_BYTES" =~ ^[0-9]+$ ]]; then
   echo "Error: Tidak bisa mendapatkan jumlah byte yang digunakan. Pastikan iptables terkonfigurasi dengan benar."
   exit 1
 fi
 
-# Menghitung total byte (incoming + outgoing)
-TOTAL_BYTES=$((IN_BYTES + OUT_BYTES))
+echo "Total byte keluar yang digunakan: $OUT_BYTES bytes"
 
 # Mengecek apakah batas tercapai
-if [ "$TOTAL_BYTES" -gt "$USAGE_LIMIT_BYTES" ]; then
+if [ "$OUT_BYTES" -gt "$USAGE_LIMIT_BYTES" ]; then
   apply_throttle
 else
   remove_throttle
