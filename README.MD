@@ -3,7 +3,7 @@ Fully Automatic Installer
 NETWORK BANDWITH
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixdeb11.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
 ```
 
 ADD SWAP RAM
