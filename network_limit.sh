@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Fungsi untuk mengubah backend dari nftables ke iptables
+function switch_to_iptables() {
+  echo "Mengubah backend iptables dari nf_tables ke iptables legacy..."
+
+  # Menginstall iptables-legacy jika belum terpasang
+  apt-get update
+  apt-get install -y iptables iptables-persistent
+
+  # Mengubah link simbolik iptables ke iptables-legacy
+  update-alternatives --set iptables /usr/sbin/iptables-legacy
+  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+  update-alternatives --set arptables /usr/sbin/arptables-legacy
+  update-alternatives --set ebtables /usr/sbin/ebtables-legacy
+
+  echo "Backend iptables telah diubah ke iptables legacy."
+}
+
 # Fungsi untuk mengatur batas penggunaan
 function set_usage_limit() {
   echo "Masukkan batas penggunaan (dalam TB):"
@@ -64,6 +81,9 @@ INTERFACE="eth0"
 
 # Kecepatan setelah limit tercapai (10 Mbps)
 LIMIT_SPEED="10mbit"
+
+# Mengubah backend ke iptables legacy
+switch_to_iptables
 
 # Mengatur batas penggunaan jaringan
 set_usage_limit
