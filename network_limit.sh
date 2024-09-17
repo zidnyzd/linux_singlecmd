@@ -4,14 +4,19 @@
 function switch_to_iptables() {
   echo "Mengubah backend iptables dari nf_tables ke iptables legacy..."
 
-  # Menginstall iptables-legacy jika belum terpasang
+  # Menginstall iptables-legacy, arptables-legacy, dan ebtables-legacy jika belum terpasang
   apt-get update
-  apt-get install -y iptables iptables-persistent
+  apt-get install -y iptables iptables-persistent arptables ebtables
 
   # Mengubah link simbolik iptables ke iptables-legacy
   update-alternatives --set iptables /usr/sbin/iptables-legacy
   update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+  
+  # Mengatur arptables dan ebtables ke versi legacy
+  update-alternatives --install /usr/sbin/arptables arptables /usr/sbin/arptables-legacy 100
   update-alternatives --set arptables /usr/sbin/arptables-legacy
+
+  update-alternatives --install /usr/sbin/ebtables ebtables /usr/sbin/ebtables-legacy 100
   update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 
   echo "Backend iptables telah diubah ke iptables legacy."
@@ -96,6 +101,12 @@ CURRENT_DATE=$(date +%d)
 
 # Reset iptables pada hari pertama setiap bulan
 if [ "$CURRENT_DATE" -eq 1 ]; then
+  reset_usage
+fi
+
+# Pastikan chain COUNT_TRAFFIC ada sebelum mencoba mendapatkan byte yang digunakan
+iptables -L COUNT_TRAFFIC -v -x > /dev/null 2>&1
+if [ $? -ne 0 ]; then
   reset_usage
 fi
 
