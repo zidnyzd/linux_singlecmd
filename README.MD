@@ -6,6 +6,12 @@ NETWORK BANDWITH
 cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
 ```
 
+SET IPV4 PRIORITY
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/set_ipv4_priority.sh && chmod +x set_ipv4_priority.sh && ./set_ipv4_priority.sh
+```
+
 ADD SWAP RAM
 
 ```html
