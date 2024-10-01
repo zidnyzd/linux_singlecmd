@@ -1,18 +1,40 @@
 #!/bin/bash
 
-# Instal Fail2Ban
-sudo apt-get update
-sudo apt-get install fail2ban -y
+# Memastikan script dijalankan dengan hak akses root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit
+fi
 
-# Konfigurasi Fail2Ban untuk SSH
-sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-sudo sed -i '/^\[sshd\]$/,/^\[/ s/enabled = .*/enabled = true/' /etc/fail2ban/jail.local
+# Update dan install fail2ban
+echo "Updating package lists and installing fail2ban..."
+apt update && apt upgrade -y
+apt install fail2ban -y
 
-# Atur waktu blokir dan jumlah percobaan
-sudo sed -i '/^\[sshd\]$/,/^\[/ s/maxretry = .*/maxretry = 1/' /etc/fail2ban/jail.local
-sudo sed -i '/^\[sshd\]$/,/^\[/ s/bantime = .*/bantime = 3600/' /etc/fail2ban/jail.local
+# Backup konfigurasi default fail2ban
+echo "Backing up default fail2ban configuration..."
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.bak
 
-# Restart Fail2Ban
-sudo service fail2ban restart
+# Membuat file jail.local untuk konfigurasi kustom fail2ban
+echo "Creating jail.local for custom configuration..."
+cat <<EOL > /etc/fail2ban/jail.local
+[DEFAULT]
+bantime = -1      # Ban selamanya
+findtime = 10m    # Cari kesalahan login dalam 10 menit
+maxretry = 1      # Ban setelah 1 kali percobaan gagal
+ignoreip = 127.0.0.1/8 ::1
 
-echo "Fail2Ban berhasil diinstal dan dikonfigurasi untuk melindungi SSH."
+[sshd]
+enabled = true
+port = ssh
+logpath = %(sshd_log)s
+EOL
+
+# Restart dan aktifkan fail2ban
+echo "Restarting fail2ban service..."
+systemctl restart fail2ban
+systemctl enable fail2ban
+
+# Periksa status fail2ban
+echo "Fail2ban has been installed and configured for permanent ban."
+fail2ban-client status sshd
