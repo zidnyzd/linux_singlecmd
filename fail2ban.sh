@@ -18,16 +18,13 @@ cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.conf.bak
 # Membuat file jail.local untuk konfigurasi kustom fail2ban
 echo "Creating jail.local for custom configuration..."
 cat <<EOL > /etc/fail2ban/jail.local
-[DEFAULT]
-bantime = -1      # Ban selamanya
-findtime = 10m    # Cari kesalahan login dalam 10 menit
-maxretry = 1      # Ban setelah 1 kali percobaan gagal
-ignoreip = 127.0.0.1/8 ::1
-
 [sshd]
 enabled = true
 port = ssh
-logpath = %(sshd_log)s
+logpath = /var/log/auth.log
+maxretry = 2
+findtime = 600  # dalam detik
+bantime = -1  # dalam detik
 EOL
 
 # Restart dan aktifkan fail2ban
