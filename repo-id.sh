@@ -1,68 +1,71 @@
 #!/bin/bash
 
-# Fungsi untuk backup dan mengganti repository sources
-replace_repo() {
+# Fungsi untuk menulis repo baru sesuai distribusi
+write_repos() {
     DISTRO=$1
-    CODENAME=$2
+    VERSION=$2
 
-    # Backup file sources.list
-    echo "Membackup file sources.list ke /etc/apt/sources.list.bak"
-    cp /etc/apt/sources.list /etc/apt/sources.list.bak
-
-    # Mengatur repository default sesuai distribusi dan codename
-    echo "Mengganti repository default untuk $DISTRO $CODENAME"
-    echo "deb http://kartolo.sby.datautama.net.id/$DISTRO/ $CODENAME main contrib non-free" > /etc/apt/sources.list
-    echo "deb http://kartolo.sby.datautama.net.id/$DISTRO/ $CODENAME-updates main contrib non-free" >> /etc/apt/sources.list
-    echo "deb http://kartolo.sby.datautama.net.id/$DISTRO-security/ $CODENAME/updates main contrib non-free" >> /etc/apt/sources.list
-    echo "deb http://kartolo.sby.datautama.net.id/$DISTRO/ $CODENAME-backports main contrib non-free" >> /etc/apt/sources.list
-    echo "deb http://kartolo.sby.datautama.net.id/$DISTRO/ $CODENAME-proposed main contrib non-free" >> /etc/apt/sources.list
-}
-
-# Fungsi untuk menghapus sumber dari /etc/apt/sources.list.d
-remove_sources_d() {
-    echo "Menghapus repository di /etc/apt/sources.list.d/"
+    # Hapus repositori lama
+    echo "Menghapus repositori lama..."
+    rm -f /etc/apt/sources.list
     rm -f /etc/apt/sources.list.d/*
+
+    echo "Menambahkan repositori default untuk $DISTRO $VERSION..."
+
+    # Debian
+    if [[ "$DISTRO" == "debian" ]]; then
+        if [[ "$VERSION" == "bookworm" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/debian/ bookworm contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ bookworm-updates contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ bookworm-proposed-updates contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ bookworm-backports contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian-security/ bookworm-security contrib main non-free non-free-firmware
+EOF
+        fi
+    fi
+
+    # Ubuntu
+    if [[ "$DISTRO" == "ubuntu" ]]; then
+        if [[ "$VERSION" == "focal" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/ubuntu/ focal main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-updates main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-security main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-backports main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ focal-proposed main restricted universe
+EOF
+        elif [[ "$VERSION" == "jammy" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/ubuntu/ jammy main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ jammy-updates main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ jammy-security main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ jammy-backports main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ jammy-proposed main restricted universe multiverse
+EOF
+        elif [[ "$VERSION" == "noble" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/ubuntu/ noble main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ noble-updates main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ noble-security main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ noble-backports main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu/ noble-proposed main restricted universe multiverse
+EOF
+        fi
+    fi
+
+    echo "Repositori untuk $DISTRO $VERSION berhasil ditambahkan."
 }
 
-# Memeriksa distribusi dan mengganti repo sesuai
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    case "$ID" in
-        debian)
-            if [ "$VERSION_ID" == "12" ]; then
-                replace_repo "debian" "bookworm"
-                remove_sources_d
-            else
-                echo "Distribusi Debian tidak dikenali atau bukan Debian 12."
-            fi
-            ;;
-        ubuntu)
-            case "$VERSION_ID" in
-                "20.04")
-                    replace_repo "ubuntu" "focal"
-                    remove_sources_d
-                    ;;
-                "22.04")
-                    replace_repo "ubuntu" "jammy"
-                    remove_sources_d
-                    ;;
-                "24.04")
-                    replace_repo "ubuntu" "noble"
-                    remove_sources_d
-                    ;;
-                *)
-                    echo "Distribusi Ubuntu tidak dikenali atau tidak didukung."
-                    ;;
-            esac
-            ;;
-        *)
-            echo "Distribusi tidak dikenali atau tidak didukung."
-            ;;
-    esac
-else
-    echo "File /etc/os-release tidak ditemukan. Pastikan skrip dijalankan di sistem berbasis Debian/Ubuntu."
-fi
+# Deteksi distribusi dan versinya
+DISTRO=$(lsb_release -i | awk '{print tolower($3)}')  # Debian/Ubuntu
+VERSION=$(lsb_release -c | awk '{print $2}')  # Bookworm/Focal/Jammy/Noble
 
-# Update apt untuk menerapkan perubahan
-echo "Melakukan update apt setelah mengganti repository..."
-apt update && apt upgrade -y
+# Panggil fungsi untuk menulis repo
+write_repos $DISTRO $VERSION
+
+# Update apt
+echo "Melakukan pembaruan apt..."
+apt update
+
+echo "Selesai."
