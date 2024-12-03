@@ -42,7 +42,7 @@ INSTALL MC
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
 ```
 
-INSTALL Repo ID Debian 10 & Ubuntu 20
+INSTALL Repo ID Debian 12 & Ubuntu 20/22/24
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
