@@ -9,7 +9,7 @@ cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/n
 SET DNS
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns.sh && chmod +x dns.sh && ./dns.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns.sh && chmod +x dns.sh && ./dns.sh```
 
 SET IPV4 PRIORITY
 
