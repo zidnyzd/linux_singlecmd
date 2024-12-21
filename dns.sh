@@ -1,27 +1,32 @@
 #!/bin/bash
 
-# Nama file resolv.conf
-RESOLV_CONF="/etc/resolv.conf"
-
-# Backup file resolv.conf sebelumnya
-if [ ! -f "${RESOLV_CONF}.backup" ]; then
-    cp "$RESOLV_CONF" "${RESOLV_CONF}.backup"
-    echo "Backup created at ${RESOLV_CONF}.backup"
+# Periksa apakah file /etc/resolv.conf adalah symlink
+if [ -L /etc/resolv.conf ]; then
+    echo "/etc/resolv.conf is a symlink. Removing it..."
+    rm -f /etc/resolv.conf
+else
+    echo "/etc/resolv.conf is not a symlink."
 fi
 
-# Menulis ulang konfigurasi resolv.conf
-cat << EOF > "$RESOLV_CONF"
+# Membuat file resolv.conf statis
+cat << EOF > /etc/resolv.conf
 # Static resolv.conf
 nameserver 45.90.28.109
 nameserver 45.90.30.109
 EOF
 
-echo "DNS has been set to 45.90.28.109 and 45.90.30.109."
+echo "DNS configuration has been set to 45.90.28.109 and 45.90.30.109."
 
-# Melindungi resolv.conf agar tidak bisa diubah proses lain
-chattr +i "$RESOLV_CONF"
+# Melindungi file resolv.conf dari perubahan
+chattr +i /etc/resolv.conf
 
-echo "File $RESOLV_CONF is now immutable. Changes by other processes are disabled."
+echo "File /etc/resolv.conf is now immutable. Changes by systemd-resolved or other processes are disabled."
 
-# Informasi tambahan
-echo "To edit or restore resolv.conf, run: chattr -i $RESOLV_CONF"
+# Menonaktifkan systemd-resolved jika diperlukan
+read -p "Do you want to disable systemd-resolved to avoid conflicts? [y/N]: " choice
+if [[ "$choice" =~ ^[Yy]$ ]]; then
+    systemctl disable --now systemd-resolved
+    echo "systemd-resolved has been disabled."
+else
+    echo "systemd-resolved is still running. Ensure it does not conflict with /etc/resolv.conf."
+fi
