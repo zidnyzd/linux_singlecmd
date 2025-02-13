@@ -1,5 +1,11 @@
 Fully Automatic Installer
 
+FIX XRAY FIGHTERTUNNEL
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
+```
+
 NETWORK BANDWITH
 
 ```html
