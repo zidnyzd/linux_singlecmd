@@ -10,7 +10,7 @@ ubah_sniffing() {
     local config_file=$1
     if [[ -f "$config_file" ]]; then
         sed -i 's/"enabled": true/"enabled": false/g' "$config_file"
-        echo "Sniffing telah diubah dari true menjadi false pada $config_file."
+        echo "Fixing XRAY $config_file."
     else
         echo "File $config_file tidak ditemukan."
     fi
