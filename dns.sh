@@ -11,8 +11,7 @@ fi
 # Membuat file resolv.conf statis
 cat << EOF > /etc/resolv.conf
 # Static resolv.conf
-nameserver 45.90.28.109
-nameserver 45.90.30.109
+nameserver 1.1.1.2
 EOF
 
 echo "DNS configuration has been set to 45.90.28.109 and 45.90.30.109."
