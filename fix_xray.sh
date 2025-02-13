@@ -24,3 +24,7 @@ ubah_sniffing "$VLESS_CONFIG"
 
 # Mengubah sniffing pada trojan/config.json
 ubah_sniffing "$TROJAN_CONFIG"
+
+systemctl restart vmess@config
+systemctl restart vless@config
+systemctl restart trojan@config
