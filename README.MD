@@ -6,6 +6,12 @@ FIX XRAY FIGHTERTUNNEL
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
 ```
 
+NEZHA-AGENT
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/nezha_agent.sh && chmod +x nezha_agent.sh && ./nezha_agent.sh
+```
+
 NETWORK BANDWITH
 
 ```html
