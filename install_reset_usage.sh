@@ -70,6 +70,10 @@ systemctl daemon-reload
 systemctl enable reset-usage.timer
 systemctl start reset-usage.timer
 
+# Jalankan skrip reset secara manual saat instalasi
+echo "Menjalankan skrip reset secara manual..."
+$RESET_SCRIPT_PATH
+
 # Verifikasi timer
 echo "Installasi selesai. Berikut status timer:"
 systemctl list-timers | grep reset-usage
