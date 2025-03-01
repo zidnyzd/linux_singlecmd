@@ -1,5 +1,11 @@
 Fully Automatic Installer
 
+install_reset_usage.sh
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
+```
+
 FIX XRAY FIGHTERTUNNEL
 
 ```html
