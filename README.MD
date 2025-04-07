@@ -12,6 +12,12 @@ Update Banner SSH
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
 ```
 
+Login Root
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
+```
+
 FIX XRAY FIGHTERTUNNEL
 
 ```html
