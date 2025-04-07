@@ -35,3 +35,8 @@ EOF
 
 # Set permission agar bisa dibaca
 chmod 644 /etc/fightertunnel.txt
+
+systemctl restart sshd
+systemctl restart dropbear
+systemctl restart ws
+systemctl restart badvpn
