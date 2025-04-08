@@ -70,9 +70,17 @@ systemctl daemon-reload
 systemctl enable reset-usage.timer
 systemctl start reset-usage.timer
 
-# Jalankan skrip reset secara manual saat instalasi
-echo "Menjalankan skrip reset secara manual..."
-$RESET_SCRIPT_PATH
+# Pilihan untuk reset sekarang atau tidak
+read -p "Apakah Anda ingin menjalankan reset sekarang juga? (y/n): " answer
+case "$answer" in
+    [Yy]* )
+        echo "Menjalankan skrip reset secara manual..."
+        $RESET_SCRIPT_PATH
+        ;;
+    * )
+        echo "Reset manual dilewati."
+        ;;
+esac
 
 # Verifikasi timer
 echo "Installasi selesai. Berikut status timer:"
