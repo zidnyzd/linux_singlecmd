@@ -18,6 +18,12 @@ Login Root
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
 ```
 
+INSTALL Repo ID Debian 10/12 & Ubuntu 20/22/24
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
+```
+
 FIX XRAY FIGHTERTUNNEL
 
 ```html
@@ -76,12 +82,6 @@ INSTALL MC
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
-```
-
-INSTALL Repo ID Debian 12 & Ubuntu 20/22/24
-
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
 ```
 
 INSTALL WARP
