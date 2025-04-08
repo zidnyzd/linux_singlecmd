@@ -22,6 +22,12 @@ deb http://kartolo.sby.datautama.net.id/debian/ bookworm-proposed-updates contri
 deb http://kartolo.sby.datautama.net.id/debian/ bookworm-backports contrib main non-free non-free-firmware
 deb http://kartolo.sby.datautama.net.id/debian-security/ bookworm-security contrib main non-free non-free-firmware
 EOF
+        elif [[ "$VERSION" == "buster" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/debian/ buster main contrib non-free
+deb http://kartolo.sby.datautama.net.id/debian/ buster-updates main contrib non-free
+deb http://kartolo.sby.datautama.net.id/debian-security/ buster/updates main contrib non-free
+EOF
         fi
     fi
 
@@ -59,7 +65,7 @@ EOF
 
 # Deteksi distribusi dan versinya
 DISTRO=$(lsb_release -i | awk '{print tolower($3)}')  # Debian/Ubuntu
-VERSION=$(lsb_release -c | awk '{print $2}')  # Bookworm/Focal/Jammy/Noble
+VERSION=$(lsb_release -c | awk '{print $2}')  # buster/bookworm/focal/jammy/noble
 
 # Panggil fungsi untuk menulis repo
 write_repos $DISTRO $VERSION
