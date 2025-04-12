@@ -27,7 +27,7 @@ wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x
 Install Gotop
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
 ```
 
 NETWORK BANDWITH
