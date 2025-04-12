@@ -24,6 +24,12 @@ INSTALL Repo ID Debian 10/12 & Ubuntu 20/22/24
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
 ```
 
+Install Gotop
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
+```
+
 NETWORK BANDWITH
 
 ```html
