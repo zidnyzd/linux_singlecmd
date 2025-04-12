@@ -36,16 +36,17 @@ fi
 cp gotop /usr/local/bin/
 chmod +x /usr/local/bin/gotop
 
-# Generate config
-gotop --write-config
-
-# Update config dengan interface pilihan
-CONFIG_FILE="$HOME/.config/gotop/gotop.conf"
-if [ -f "$CONFIG_FILE" ]; then
-  sed -i "/^interface = /c\interface = \"$INTERFACE\"" "$CONFIG_FILE"
+# Buat alias permanen di ~/.bashrc
+if ! grep -q "alias gotop=" ~/.bashrc; then
+  echo "alias gotop='gotop --interface=$INTERFACE'" >> ~/.bashrc
+  echo "[OK] Alias untuk gotop ditambahkan ke ~/.bashrc"
 else
-  echo "interface = \"$INTERFACE\"" >> "$CONFIG_FILE"
+  sed -i "s|alias gotop=.*|alias gotop='gotop --interface=$INTERFACE'|" ~/.bashrc
+  echo "[UPDATED] Alias gotop diperbarui di ~/.bashrc"
 fi
 
-echo "[✅ SELESAI] gotop berhasil terinstall dan dikonfigurasi."
+# Aktifkan alias
+source ~/.bashrc
+
+echo "[✅ SELESAI] gotop berhasil terinstall, dikonfigurasi, dan siap dipakai!"
 echo "[ℹ️  INFO] Jalankan dengan perintah: gotop"
