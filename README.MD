@@ -39,7 +39,7 @@ cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/n
 RESTART WARP
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp-restart.sh.sh && chmod +x warp-restart.sh.sh && ./warp-restart.sh.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp-restart.sh && chmod +x warp-restart.sh && ./warp-restart.sh
 ```
 
 SET DNS
