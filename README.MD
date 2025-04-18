@@ -36,13 +36,13 @@ NETWORK BANDWITH
 cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
 ```
 
-SET DNS
+RESTART WARP
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp-restart.sh.sh && chmod +x warp-restart.sh.sh && ./warp-restart.sh.sh
 ```
 
-RESTART WARP
+SET DNS
 
 ```html
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns.sh && chmod +x dns.sh && ./dns.sh
