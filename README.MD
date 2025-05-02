@@ -12,12 +12,6 @@ Update Banner SSH
 wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
 ```
 
-Login Root
-
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
-```
-
 INSTALL Repo Debian 10/11/12 & Ubuntu 20/22/24
 
 ```html
@@ -34,6 +28,12 @@ NETWORK BANDWITH
 
 ```html
 cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
+```
+
+Login Root
+
+```html
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
 ```
 
 RESTART WARP
