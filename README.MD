@@ -15,7 +15,7 @@ wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x 
 INSTALL Repo Debian 10/11/12 & Ubuntu 20/22/24
 
 ```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo-id.sh && chmod +x repo-id.sh && ./repo-id.sh
+wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
 ```
 
 Install Gotop
