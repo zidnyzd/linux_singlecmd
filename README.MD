@@ -1,103 +1,138 @@
-Fully Automatic Installer
+# 🚀 Linux Server Management Scripts
 
-Fix XRAY
+![Linux Logo](https://raw.githubusercontent.com/torvalds/linux/master/Documentation/logo.gif)
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
-```
+## 📋 Overview
 
-Reset Usage
+Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dirancang untuk memudahkan pengelolaan server, meningkatkan keamanan, dan mengoptimalkan performa sistem.
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
-```
+## 🛠️ Script Categories
 
-Update Banner SSH
+### 🔒 Security & Protection
+- **Fail2Ban Installation** - Blokir serangan brute force SSH
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
-```
+- **Root Access Management**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
+  ```
 
-INSTALL Repo Debian 10/11/12 & Ubuntu 20/22/24
+### 🌐 Network Management
+- **WARP Configuration**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp.sh && chmod +x warp.sh && ./warp.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
-```
+- **WARP Restart**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp-restart.sh && chmod +x warp-restart.sh && ./warp-restart.sh
+  ```
 
-Install Gotop
+- **DNS Configuration**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns.sh && chmod +x dns.sh && ./dns.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
-```
+- **IPv4 Priority Setting**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/set_ipv4_priority.sh && chmod +x set_ipv4_priority.sh && ./set_ipv4_priority.sh
+  ```
 
-NETWORK BANDWITH
+### 💻 System Optimization
+- **Repository Setup** (Debian 10/11/12 & Ubuntu 20/22/24)
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
+  ```
 
-```html
-cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
-```
+- **LowSpec VPS Optimization**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
+  ```
 
-Login Root
+- **Add Swap RAM**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap.sh && chmod +x add_swap.sh && ./add_swap.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/root.sh && chmod +x root.sh && ./root.sh
-```
+### 📊 Monitoring & Management
+- **Gotop Installation** (System Monitor)
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
+  ```
 
-RESTART WARP
+- **Network Bandwidth Control**
+  ```bash
+  cd /usr/local/bin && wget https://raw.githubusercontent.com/zidnyzd/linux/main/network_limit.sh && sudo chmod +x /usr/local/bin/network_limit.sh && sudo /usr/local/bin/network_limit.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp-restart.sh && chmod +x warp-restart.sh && ./warp-restart.sh
-```
+- **VNStat Fix**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
+  ```
 
-SET DNS
+### 🎮 Game Server Management
+- **Minecraft Server Installation**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns.sh && chmod +x dns.sh && ./dns.sh
-```
+### 🔧 Maintenance & Utilities
+- **XRAY Fix**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
+  ```
 
-SET IPV4 PRIORITY
+- **Usage Reset**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
+  ```
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/set_ipv4_priority.sh && chmod +x set_ipv4_priority.sh && ./set_ipv4_priority.sh
-```
+- **SSH Banner Update**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
+  ```
 
-ADD SWAP RAM
+## 📝 Usage Instructions
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap.sh && chmod +x add_swap.sh && ./add_swap.sh
-```
+1. **Download Script**
+   - Gunakan perintah `wget` untuk mengunduh script yang diinginkan
+   - Pastikan URL script benar
 
-INSTALL FAIL2BAN (BLOCK SPAM SSH)
+2. **Set Permissions**
+   - Berikan izin eksekusi dengan `chmod +x`
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
-```
+3. **Run Script**
+   - Jalankan script dengan `./nama_script.sh`
 
-FIX LowSpec VPS (Remove DNSTT & OpenVPN)
+## ⚠️ Important Notes
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
-```
+- Pastikan Anda memiliki akses root/sudo
+- Backup data penting sebelum menjalankan script
+- Baca dokumentasi setiap script sebelum digunakan
+- Sesuaikan konfigurasi dengan kebutuhan server Anda
 
-INSTALL XM
+## 🔍 Troubleshooting
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/min.sh && chmod +x min.sh && ./min.sh
-```
+Jika mengalami masalah:
+1. Periksa log sistem
+2. Pastikan semua dependensi terpenuhi
+3. Verifikasi koneksi internet
+4. Periksa versi sistem operasi
 
-INSTALL MC
+## 🤝 Contributing
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/minecraft.sh && chmod +x minecraft.sh && ./minecraft.sh
-```
+Kontribusi selalu diterima! Silakan:
+- Fork repository
+- Buat branch baru
+- Commit perubahan
+- Push ke branch
+- Buat Pull Request
 
-INSTALL WARP
+## 📜 License
 
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/warp.sh && chmod +x warp.sh && ./warp.sh
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-FIX VNSTAT
-
-```html
-wget https://raw.githubusercontent.com/zidnyzd/linux/main/vnstat.sh && chmod +x vnstat.sh && ./vnstat.sh
-```
+---
+Made with ❤️ for Linux Server Management
