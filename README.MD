@@ -56,6 +56,11 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/add_swap.sh && chmod +x add_swap.sh && ./add_swap.sh
   ```
 
+- **Fix Storage Full**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_storage.sh && chmod +x fix_storage.sh && ./fix_storage.sh
+  ```
+
 ### 📊 Monitoring & Management
 - **Gotop Installation** (System Monitor)
   ```bash

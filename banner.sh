@@ -7,13 +7,7 @@ rm -f /etc/fightertunnel.txt
 cat << 'EOF' > /etc/fightertunnel.txt
 <pre>
 <font color="#FF0000">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">███████╗██╗██████╗    ███████╗████████╗ ██████╗ ██████╗ ███████╗</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">╚══███╔╝██║██╔══██╗   ██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗██╔════╝</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">  ███╔╝ ██║██║  ██║   ███████╗   ██║   ██║   ██║██████╔╝█████╗</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00"> ███╔╝  ██║██║  ██║   ╚════██║   ██║   ██║   ██║██╔══██╗██╔══╝</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">███████╗██║██████╔╝   ███████║   ██║   ╚██████╔╝██║  ██║███████╗</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">╚══════╝╚═╝╚═════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">⚡ PREMIUM VPN & SSH SERVICE ⚡</font>                        <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#FFFFFF">⚡ VPN & SSH SERVICE by ZidStore ⚡</font>                        <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
 <font color="#FF0000">┃</font>  <font color="#FFCC00">📋 RULES:</font>                                             <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">❌ No DDOS/Torrent/Multi Login/Sharing</font>                <font color="#FF0000">┃</font>
@@ -24,13 +18,13 @@ cat << 'EOF' > /etc/fightertunnel.txt
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">📨 TG: https://t.me/storezid2</font>                         <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">📢 CH: https://t.me/zidstorevpn</font>                       <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">🤖 BOT:</font>                                               <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#00FF00">🤖 BOT Auto Order Akun VPN/SSH:</font>                                               <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">🔗 https://t.me/zidvpnstorebot</font>                       <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
 <font color="#FF0000">┃</font>  <font color="#FFCC00">🛍️ SERVICES:</font>                                          <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS UB: http://t.me/zidstorevpn/16</font>                <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS DO: http://t.me/zidstorevpn/17</font>                <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 XL: http://t.me/zidstorevpn/19</font>                     <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS Unlimited Bandwidth: http://t.me/zidstorevpn/16</font>                <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS DigitalOcean: http://t.me/zidstorevpn/17</font>                <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 Tembak Paket XL: http://t.me/zidstorevpn/19</font>                     <font color="#FF0000">┃</font>
 <font color="#FF0000">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</font>
 </pre>
 EOF
