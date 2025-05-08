@@ -20,11 +20,6 @@ cat << 'EOF' > /etc/fightertunnel.txt
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃  🤖 BOT Auto Order Akun VPN/SSH:                          ┃
 ┃  🔗 https://t.me/zidvpnstorebot                           ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  🛍️ SERVICES:                                             ┃
-┃  🔹 VPS UB: http://t.me/zidstorevpn/16                    ┃
-┃  🔹 VPS DO: http://t.me/zidstorevpn/17                    ┃
-┃  🔹 XL: http://t.me/zidstorevpn/19                        ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 </pre>
 EOF
