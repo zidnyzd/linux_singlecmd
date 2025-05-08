@@ -6,26 +6,26 @@ rm -f /etc/fightertunnel.txt
 # Buat ulang dengan konten baru
 cat << 'EOF' > /etc/fightertunnel.txt
 <pre>
-<font color="#FF0000">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">⚡ VPN & SSH SERVICE by ZidStore ⚡</font>                        <font color="#FF0000">┃</font>
-<font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#FFCC00">📋 RULES:</font>                                             <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">❌ No DDOS/Torrent/Multi Login/Sharing</font>                <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔄 Auto Reboot: 02:00 AM GMT+7</font>                        <font color="#FF0000">┃</font>
-<font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#00FFFF">📱 CONTACT:</font>                                           <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">📲 WA: https://wa.me/+6285184673439</font>                   <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">📨 TG: https://t.me/storezid2</font>                         <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">📢 CH: https://t.me/zidstorevpn</font>                       <font color="#FF0000">┃</font>
-<font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">🤖 BOT Auto Order Akun VPN/SSH:</font>                                               <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔗 https://t.me/zidvpnstorebot</font>                       <font color="#FF0000">┃</font>
-<font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#FFCC00">🛍️ SERVICES:</font>                                          <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS Unlimited Bandwidth: http://t.me/zidstorevpn/16</font>                <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 VPS DigitalOcean: http://t.me/zidstorevpn/17</font>                <font color="#FF0000">┃</font>
-<font color="#FF0000">┃</font>  <font color="#FFFFFF">🔹 Tembak Paket XL: http://t.me/zidstorevpn/19</font>                     <font color="#FF0000">┃</font>
-<font color="#FF0000">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</font>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ⚡ VPN & SSH SERVICE by ZidStore ⚡                        ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  📋 RULES:                                                 ┃
+┃  ❌ No DDOS/Torrent/Multi Login/Sharing                    ┃
+┃  🔄 Auto Reboot: 02:00 AM GMT+7                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  📱 CONTACT:                                               ┃
+┃  📲 WA: https://wa.me/+6285184673439                      ┃
+┃  📨 TG: https://t.me/storezid2                            ┃
+┃  📢 CH: https://t.me/zidstorevpn                          ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  🤖 BOT Auto Order Akun VPN/SSH:                          ┃
+┃  🔗 https://t.me/zidvpnstorebot                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  🛍️ SERVICES:                                             ┃
+┃  🔹 VPS UB: http://t.me/zidstorevpn/16                    ┃
+┃  🔹 VPS DO: http://t.me/zidstorevpn/17                    ┃
+┃  🔹 XL: http://t.me/zidstorevpn/19                        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 </pre>
 EOF
 
