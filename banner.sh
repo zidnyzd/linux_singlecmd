@@ -13,7 +13,6 @@ cat << 'EOF' > /etc/fightertunnel.txt
 <font color="#FF0000">┃</font>  <font color="#00FF00"> ███╔╝  ██║██║  ██║   ╚════██║   ██║   ██║   ██║██╔══██╗██╔══╝</font>  <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#00FF00">███████╗██║██████╔╝   ███████║   ██║   ╚██████╔╝██║  ██║███████╗</font>  <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#00FF00">╚══════╝╚═╝╚═════╝    ╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝</font>  <font color="#FF0000">┃</font>
-<font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">⚡ PREMIUM VPN & SSH SERVICE ⚡</font>                        <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
 <font color="#FF0000">┃</font>  <font color="#FFCC00">📋 RULES:</font>                                             <font color="#FF0000">┃</font>
@@ -25,7 +24,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">📨 TG: https://t.me/storezid2</font>                         <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">📢 CH: https://t.me/zidstorevpn</font>                       <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
-<font color="#FF0000">┃</font>  <font color="#00FF00">🤖 BOT AUTO ORDER VPN/SSH:</font>                                               <font color="#FF0000">┃</font>
+<font color="#FF0000">┃</font>  <font color="#00FF00">🤖 BOT:</font>                                               <font color="#FF0000">┃</font>
 <font color="#FF0000">┃</font>  <font color="#FFFFFF">🔗 https://t.me/zidvpnstorebot</font>                       <font color="#FF0000">┃</font>
 <font color="#FF0000">┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫</font>
 <font color="#FF0000">┃</font>  <font color="#FFCC00">🛍️ SERVICES:</font>                                          <font color="#FF0000">┃</font>
