@@ -30,8 +30,21 @@ print_info() {
     echo -e "\n${YELLOW}ℹ️  Info: $1${NC}\n"
 }
 
+# Function to display system information
+display_system_info() {
+    echo -e "${BLUE}┌────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${BLUE}│${NC} ${BOLD}System Information:${NC}"
+    echo -e "${BLUE}│${NC} OS: $(lsb_release -d | cut -f2)"
+    echo -e "${BLUE}│${NC} Architecture: $(uname -m)"
+    echo -e "${BLUE}│${NC} Total Memory: $(free -h | awk '/^Mem:/ {print $2}')"
+    echo -e "${BLUE}└────────────────────────────────────────────────────────┘${NC}\n"
+}
+
 # Display header
 print_header
+
+# Display system information
+display_system_info
 
 # Get current active kernel
 active_kernel=$(uname -r)
@@ -46,6 +59,17 @@ mapfile -t kernel_array <<< "$kernels"
 # Check if there are any kernels to remove
 if [ ${#kernel_array[@]} -eq 0 ]; then
     print_info "No removable kernels found. Your system is clean!"
+    print_info "Current kernel status:"
+    echo -e "${BLUE}┌────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${BLUE}│${NC} ${BOLD}Installed Kernels:${NC}"
+    dpkg --list | grep 'linux-image' | grep -E 'generic|cloud' | awk '{print $2}' | while read -r kernel; do
+        if [[ "$kernel" == *"$active_kernel"* ]]; then
+            echo -e "${BLUE}│${NC} ${GREEN}✓ $kernel (Active)${NC}"
+        else
+            echo -e "${BLUE}│${NC} $kernel"
+        fi
+    done
+    echo -e "${BLUE}└────────────────────────────────────────────────────────┘${NC}"
     exit 0
 fi
 
