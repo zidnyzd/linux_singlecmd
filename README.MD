@@ -46,6 +46,11 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
   ```
 
+- **Kernel Management Tool**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_kernel.sh && chmod +x fix_kernel.sh && ./fix_kernel.sh
+  ```
+
 - **LowSpec VPS Optimization**
   ```bash
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
