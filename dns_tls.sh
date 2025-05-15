@@ -73,7 +73,7 @@ upstream_recursive_servers:
 EOF
 
   # Validasi & Jalankan
-  stubby -C /etc/stubby/stubby.yml -v || rollback
+  stubby -C /etc/stubby/stubby.yml -i || rollback
   systemctl enable stubby
   systemctl restart stubby || rollback
 
