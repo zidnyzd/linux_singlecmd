@@ -99,6 +99,11 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
   ```
 
+- **DNS TLS**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns_tls.sh && chmod +x dns_tls.sh && ./dns_tls.sh
+  ```
+
 - **Usage Reset**
   ```bash
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
