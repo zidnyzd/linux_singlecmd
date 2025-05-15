@@ -72,8 +72,10 @@ upstream_recursive_servers:
     tls_port: 853
 EOF
 
-  # Validasi & Jalankan
+  # ✅ Validasi config menggunakan -i (fix)
   stubby -C /etc/stubby/stubby.yml -i || rollback
+
+  # Enable & restart
   systemctl enable stubby
   systemctl restart stubby || rollback
 
