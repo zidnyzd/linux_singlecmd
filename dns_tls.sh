@@ -7,7 +7,13 @@ NEXTDNS_NAME="91ac82.dns.nextdns.io"
 BACKUP_STUBBY="/etc/stubby/stubby.yml.bak"
 BACKUP_RESOLV="/etc/resolv.conf.bak"
 RESOLV_CONF="/etc/resolv.conf"
+LOG_FILE="/var/log/nextdns-setup.log"
 #=======================
+
+#==== LOGGING FUNCTION ====
+log() {
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
 
 #==== ASCII HEADER ====
 clear
@@ -25,98 +31,102 @@ echo ""
 
 #==== ROLLBACK FUNCTION ====
 rollback() {
-  echo "⚠️ Terjadi kesalahan. Melakukan rollback konfigurasi..."
+  log "⚠️ Terjadi kesalahan. Melakukan rollback konfigurasi..."
 
   if [ -f "$BACKUP_STUBBY" ]; then
     cp "$BACKUP_STUBBY" /etc/stubby/stubby.yml
-    echo "✅ stubby.yml dikembalikan."
+    log "✅ stubby.yml dikembalikan."
   fi
 
   if [ -f "$BACKUP_RESOLV" ]; then
     cp "$BACKUP_RESOLV" "$RESOLV_CONF"
-    echo "✅ resolv.conf dikembalikan."
+    log "✅ resolv.conf dikembalikan."
   fi
 
-  systemctl restart stubby
-  echo "⛔ Setup dibatalkan. Sistem dikembalikan ke keadaan semula."
+  systemctl restart stubby &>> "$LOG_FILE"
+  log "⛔ Setup dibatalkan. Sistem dikembalikan ke keadaan semula."
   exit 1
 }
 
 #==== INSTALL FUNCTION ====
 install_nextdns() {
-  echo "🔧 Memasang Stubby dan mengatur NextDNS..."
+  log "🔧 Memasang Stubby dan mengatur NextDNS..."
 
   # Backup konfigurasi awal
-  cp /etc/stubby/stubby.yml "$BACKUP_STUBBY"
-  cp "$RESOLV_CONF" "$BACKUP_RESOLV"
+  cp /etc/stubby/stubby.yml "$BACKUP_STUBBY" 2>/dev/null
+  cp "$RESOLV_CONF" "$BACKUP_RESOLV" 2>/dev/null
 
   # Instalasi stubby
-  apt update && apt install -y stubby dnsutils || rollback
+  apt update >> "$LOG_FILE" 2>&1
+  apt install -y stubby dnsutils >> "$LOG_FILE" 2>&1 || rollback
 
-  # Konfigurasi stubby
-  cat > /etc/stubby/stubby.yml <<EOF
+  # Tulis konfigurasi YAML menggunakan tee (preserve indent)
+  tee /etc/stubby/stubby.yml > /dev/null <<'EOF'
+# Stubby configuration for NextDNS DoT (Debian 10 Compatible)
 resolution_type: GETDNS_RESOLUTION_STUB
 dns_transport_list:
   - GETDNS_TRANSPORT_TLS
-tls_authentication: GETDNS_AUTH_REQUIRED
+tls_authentication: GETDNS_AUTH_NONE
 tls_query_padding_blocksize: 128
-edns_client_subnet_private: 1
-round_robin_upstreams: 1
+edns_client_subnet_private: true
+round_robin_upstreams: true
 
 upstream_recursive_servers:
-  - address_data: $NEXTDNS_IP1
-    tls_auth_name: "$NEXTDNS_NAME"
+  - address_data: 45.90.28.57
+    tls_auth_name: "91ac82.dns.nextdns.io"
     tls_port: 853
-  - address_data: $NEXTDNS_IP2
-    tls_auth_name: "$NEXTDNS_NAME"
+  - address_data: 45.90.30.57
+    tls_auth_name: "91ac82.dns.nextdns.io"
     tls_port: 853
 EOF
 
-  # ✅ Validasi config menggunakan -i (fix)
-  stubby -C /etc/stubby/stubby.yml -i || rollback
+  # Validasi konfigurasi stubby
+  stubby -C /etc/stubby/stubby.yml -i >> "$LOG_FILE" 2>&1 || {
+    log "❌ Validasi YAML gagal. Isi stubby.yml:"
+    cat /etc/stubby/stubby.yml | tee -a "$LOG_FILE"
+    rollback
+  }
 
-  # Enable & restart
-  systemctl enable stubby
-  systemctl restart stubby || rollback
+  # Enable dan restart stubby
+  systemctl enable stubby >> "$LOG_FILE" 2>&1
+  systemctl restart stubby >> "$LOG_FILE" 2>&1 || rollback
 
   # Atur resolv.conf
   if systemctl is-active --quiet systemd-resolved; then
     sed -i 's/^#*DNS=.*/DNS=127.0.0.1/' /etc/systemd/resolved.conf
     sed -i 's/^#*FallbackDNS=.*/FallbackDNS=/' /etc/systemd/resolved.conf
-    systemctl restart systemd-resolved
+    systemctl restart systemd-resolved >> "$LOG_FILE" 2>&1
     ln -sf /run/systemd/resolve/resolv.conf "$RESOLV_CONF"
   else
     echo "nameserver 127.0.0.1" > "$RESOLV_CONF"
   fi
 
-  echo ""
-  echo "🎉 NextDNS berhasil diaktifkan dengan DNS-over-TLS!"
+  log "🎉 NextDNS berhasil diaktifkan dengan DNS-over-TLS!"
 }
 
 #==== UNINSTALL FUNCTION ====
 uninstall_nextdns() {
-  echo "🗑️ Menghapus konfigurasi dan mengembalikan sistem DNS..."
+  log "🗑️ Menghapus konfigurasi dan mengembalikan sistem DNS..."
 
   if [ -f "$BACKUP_STUBBY" ]; then
     cp "$BACKUP_STUBBY" /etc/stubby/stubby.yml
-    echo "✅ stubby.yml dikembalikan."
+    log "✅ stubby.yml dikembalikan."
   fi
 
   if [ -f "$BACKUP_RESOLV" ]; then
     cp "$BACKUP_RESOLV" "$RESOLV_CONF"
-    echo "✅ resolv.conf dikembalikan."
+    log "✅ resolv.conf dikembalikan."
   fi
 
-  systemctl stop stubby
-  systemctl disable stubby
-  apt remove --purge -y stubby
-  apt autoremove -y
+  systemctl stop stubby >> "$LOG_FILE" 2>&1
+  systemctl disable stubby >> "$LOG_FILE" 2>&1
+  apt remove --purge -y stubby >> "$LOG_FILE" 2>&1
+  apt autoremove -y >> "$LOG_FILE" 2>&1
 
-  echo ""
-  echo "✅ Uninstall selesai. Sistem telah dikembalikan ke konfigurasi DNS sebelumnya."
+  log "✅ Uninstall selesai. Sistem telah dikembalikan ke konfigurasi DNS sebelumnya."
 }
 
-#==== PILIHAN EKSEKUSI ====
+#==== EKSEKUSI ====
 case "$choice" in
   1)
     install_nextdns
