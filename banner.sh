@@ -24,8 +24,8 @@ cat << 'EOF' > /etc/fightertunnel.txt
   Melanggar? Auto Delete Account<br><br>
   <b>CONTACT US:</b><br>
   Telegram: https://t.me/storezid2<br>
-  Telegram Channel: https://t.me/zidstorevpn<br><br>
-  Whatsapp: https://wa.me/+6285184673439<br>
+  Telegram Channel: https://t.me/zidstorevpn<br>
+  Whatsapp: https://wa.me/+6285184673439<br><br>
   Bot Auto Order VPN/SSH<br>
   https://t.me/zidvpnstorebot<br>
   Buat Akun Kapan Saja, Online 24/7<br>
