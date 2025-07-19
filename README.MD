@@ -104,6 +104,11 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_haproxy.sh && chmod +x fix_haproxy.sh && ./fix_haproxy.sh
   ```
 
+- **Haproxy Fix**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x ws.sh && ./fix_ws.sh
+  ```
+
 - **DNS TLS**
   ```bash
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/dns_tls.sh && chmod +x dns_tls.sh && ./dns_tls.sh
