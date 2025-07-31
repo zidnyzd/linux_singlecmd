@@ -24,7 +24,6 @@ EOF
                 cat <<EOF > /etc/apt/sources.list
 deb http://deb.debian.org/debian bullseye main contrib non-free
 deb http://deb.debian.org/debian bullseye-updates main contrib non-free
-deb http://deb.debian.org/debian bullseye-backports main contrib non-free
 deb http://security.debian.org/debian-security/ bullseye-security main contrib non-free
 EOF
                 ;;
@@ -108,7 +107,6 @@ EOF
 deb http://kartolo.sby.datautama.net.id/debian/ bullseye main contrib non-free
 deb http://kartolo.sby.datautama.net.id/debian/ bullseye-updates main contrib non-free
 deb http://kartolo.sby.datautama.net.id/debian-security/ bullseye-security main contrib non-free
-deb http://kartolo.sby.datautama.net.id/debian/ bullseye-backports main contrib non-free
 EOF
         fi
     elif [[ "$DISTRO" == "ubuntu" ]]; then
