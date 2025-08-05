@@ -180,8 +180,12 @@ iptables -L fail2ban-icmp-block >/dev/null 2>&1 || iptables -N fail2ban-icmp-blo
 iptables -C INPUT -p icmp -j fail2ban-icmp-block >/dev/null 2>&1 || iptables -I INPUT -p icmp -j fail2ban-icmp-block
 
 # Memastikan semua IP yang di-ban SSH juga di-blokir ICMP
-fail2ban-client get sshd banned | while read ip; do
-    iptables -C fail2ban-icmp-block -s \$ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s \$ip -j REJECT
+echo "Syncing banned IPs to ICMP block chain..."
+fail2ban-client status sshd | grep "Banned IP list:" | sed 's/.*Banned IP list:[[:space:]]*//' | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | while read ip; do
+    if [ -n "\$ip" ]; then
+        iptables -C fail2ban-icmp-block -s \$ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s \$ip -j REJECT
+        echo "Added \$ip to ICMP block chain"
+    fi
 done
 EOL
 
@@ -190,6 +194,10 @@ chmod +x /usr/local/bin/fail2ban-icmp-maintain.sh
 # Menambahkan cron job untuk maintenance
 echo "Adding cron job for ICMP block maintenance..."
 (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/fail2ban-icmp-maintain.sh") | crontab -
+
+# Jalankan maintenance script untuk menambahkan IP yang sudah di-ban
+echo "Running initial ICMP block maintenance..."
+/usr/local/bin/fail2ban-icmp-maintain.sh
 
 # Test Telegram bot jika konfigurasi tersedia
 if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
@@ -229,8 +237,14 @@ echo "=== ICMP Blocking Status ==="
 echo "Checking ICMP block chain..."
 if iptables -L fail2ban-icmp-block >/dev/null 2>&1; then
     echo "✓ ICMP block chain is active"
-    echo "Banned IPs in ICMP block chain:"
-    iptables -L fail2ban-icmp-block -n | grep REJECT | awk '{print $4}' | sort -u
+    banned_in_chain=$(iptables -L fail2ban-icmp-block -n | grep REJECT | awk '{print $4}' | sort -u)
+    if [ -n "$banned_in_chain" ]; then
+        echo "Banned IPs in ICMP block chain:"
+        echo "$banned_in_chain"
+    else
+        echo "⚠️  No IPs in ICMP block chain yet"
+        echo "   (IPs will be added automatically via maintenance script)"
+    fi
 else
     echo "✗ ICMP block chain not found"
 fi
