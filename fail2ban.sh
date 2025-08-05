@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# =============================================================================
+# FAIL2BAN COMPLETE SETUP SCRIPT
+# =============================================================================
+# Script ini menginstall dan mengkonfigurasi fail2ban dengan fitur lengkap:
+# - SSH protection dengan permanent ban
+# - ICMP (ping) blocking untuk IP yang di-ban
+# - Telegram notifications untuk security alerts
+# - Automatic maintenance dan sync IP
+# - Semua dalam satu script (tidak perlu script tambahan)
+# =============================================================================
+
 # Memastikan script dijalankan dengan hak akses root
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
@@ -199,6 +210,21 @@ echo "Adding cron job for ICMP block maintenance..."
 echo "Running initial ICMP block maintenance..."
 /usr/local/bin/fail2ban-icmp-maintain.sh
 
+# Tambahan: Sync IP yang sudah di-ban ke ICMP chain secara langsung
+echo "Syncing existing banned IPs to ICMP block chain..."
+existing_banned_ips=$(fail2ban-client status sshd | grep "Banned IP list:" | sed 's/.*Banned IP list:[[:space:]]*//' | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+
+if [ -n "$existing_banned_ips" ]; then
+    echo "Found existing banned IPs: $existing_banned_ips"
+    for ip in $existing_banned_ips; do
+        echo "Adding $ip to ICMP block chain..."
+        iptables -C fail2ban-icmp-block -s $ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s $ip -j REJECT
+    done
+    echo "✅ All existing banned IPs synced to ICMP block chain"
+else
+    echo "ℹ️  No existing banned IPs found"
+fi
+
 # Test Telegram bot jika konfigurasi tersedia
 if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
     echo "Testing Telegram bot notification..."
@@ -271,6 +297,17 @@ if systemctl is-active --quiet fail2ban; then
     echo "   • ICMP (ping) blocking for banned IPs"
     echo "   • Telegram notifications for security alerts"
     echo "   • Automatic maintenance every 5 minutes"
+    echo "   • Automatic sync of existing banned IPs to ICMP chain"
+    echo ""
+    echo "📋 What this script does:"
+    echo "   ✅ Installs and configures fail2ban"
+    echo "   ✅ Sets up ICMP blocking for banned IPs"
+    echo "   ✅ Configures Telegram notifications"
+    echo "   ✅ Syncs existing banned IPs to ICMP chain"
+    echo "   ✅ Creates maintenance script for auto-sync"
+    echo "   ✅ Tests Telegram bot functionality"
+    echo ""
+    echo "🔧 No additional scripts needed - everything is integrated!"
 else
     echo "Warning: Fail2ban service is not running"
     exit 1
