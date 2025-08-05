@@ -196,6 +196,38 @@ elif [ "$1" = "--fix-icmp" ]; then
 elif [ "$1" = "--status" ]; then
     show_status
     exit 0
+elif [ "$1" = "--restart" ]; then
+    echo "🔄 Restarting fail2ban with proper configuration..."
+    
+    # Stop fail2ban
+    systemctl stop fail2ban
+    
+    # Wait a moment
+    sleep 2
+    
+    # Start fail2ban
+    systemctl start fail2ban
+    
+    # Wait for service to be ready
+    sleep 5
+    
+    # Check status
+    if systemctl is-active --quiet fail2ban; then
+        echo "✅ Fail2ban restarted successfully"
+        echo ""
+        echo "📊 Current status:"
+        fail2ban-client status sshd 2>/dev/null || echo "Service starting..."
+        
+        # Re-sync ICMP blocking
+        echo ""
+        echo "🛡️ Re-syncing ICMP blocking..."
+        fix_icmp
+    else
+        echo "❌ Failed to restart fail2ban"
+        systemctl status fail2ban
+    fi
+    
+    exit 0
 elif [ "$1" = "--debug" ]; then
     echo "🔍 FAIL2BAN DEBUG MODE"
     echo "======================"
@@ -252,6 +284,7 @@ elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  sudo bash fail2ban.sh --test-telegram    # Test Telegram notifications"
     echo "  sudo bash fail2ban.sh --fix-icmp         # Fix ICMP blocking"
     echo "  sudo bash fail2ban.sh --status           # Show current status"
+    echo "  sudo bash fail2ban.sh --restart          # Restart fail2ban properly"
     echo "  sudo bash fail2ban.sh --debug            # Debug fail2ban issues"
     echo "  sudo bash fail2ban.sh --help             # Show this help"
     echo ""
@@ -544,12 +577,30 @@ fi
 # Verifikasi action Telegram terdaftar
 echo "Verifying Telegram action configuration..."
 if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
-    if fail2ban-client get sshd actions | grep -q "telegram-notify"; then
-        echo "✓ Telegram action is properly configured"
+    # Wait for fail2ban to be fully started
+    sleep 3
+    
+    # Check if fail2ban is running
+    if systemctl is-active --quiet fail2ban; then
+        if fail2ban-client get sshd actions 2>/dev/null | grep -q "telegram-notify"; then
+            echo "✓ Telegram action is properly configured"
+        else
+            echo "⚠️ Telegram action not found in jail configuration"
+            echo "Checking jail configuration..."
+            fail2ban-client get sshd actions 2>/dev/null || echo "Service not ready yet"
+        fi
     else
-        echo "⚠️ Telegram action not found in jail configuration"
-        echo "Checking jail configuration..."
-        fail2ban-client get sshd actions
+        echo "⚠️ Fail2ban service not running yet, waiting..."
+        sleep 5
+        if systemctl is-active --quiet fail2ban; then
+            if fail2ban-client get sshd actions 2>/dev/null | grep -q "telegram-notify"; then
+                echo "✓ Telegram action is properly configured"
+            else
+                echo "⚠️ Telegram action not found in jail configuration"
+            fi
+        else
+            echo "❌ Fail2ban service failed to start"
+        fi
     fi
 fi
 
@@ -560,7 +611,21 @@ fi
 
 # Periksa status fail2ban
 echo "Fail2ban has been installed and configured for permanent ban with ICMP blocking and Telegram notifications."
-fail2ban-client status sshd
+
+# Wait for service to be ready
+sleep 2
+if systemctl is-active --quiet fail2ban; then
+    fail2ban-client status sshd 2>/dev/null || echo "Service starting, please wait..."
+else
+    echo "⚠️ Fail2ban service not running, attempting to start..."
+    systemctl start fail2ban
+    sleep 3
+    if systemctl is-active --quiet fail2ban; then
+        fail2ban-client status sshd 2>/dev/null || echo "Service started but not ready yet"
+    else
+        echo "❌ Failed to start fail2ban service"
+    fi
+fi
 
 # Tampilkan informasi ICMP blocking
 echo ""
@@ -574,7 +639,19 @@ if iptables -L fail2ban-icmp-block >/dev/null 2>&1; then
         echo "$banned_in_chain"
     else
         echo "⚠️  No IPs in ICMP block chain yet"
-        echo "   (IPs will be added automatically via maintenance script)"
+        echo "   Re-syncing banned IPs to ICMP chain..."
+        
+        # Re-sync IPs to ICMP chain
+        banned_status=$(fail2ban-client status sshd 2>/dev/null | grep "Banned IP list:")
+        if [ -n "$banned_status" ]; then
+            banned_ips=$(echo "$banned_status" | sed 's/.*Banned IP list:[[:space:]]*//' | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+            if [ -n "$banned_ips" ]; then
+                for ip in $banned_ips; do
+                    iptables -C fail2ban-icmp-block -s $ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s $ip -j REJECT
+                done
+                echo "✅ Re-synced $(echo "$banned_ips" | wc -w) IPs to ICMP block chain"
+            fi
+        fi
     fi
 else
     echo "✗ ICMP block chain not found"
