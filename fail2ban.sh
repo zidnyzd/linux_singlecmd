@@ -159,6 +159,31 @@ show_status() {
     else
         echo "❌ .vars file not found"
     fi
+    
+    # Check log files
+    echo ""
+    echo "📋 Log Files Status:"
+    for logfile in /var/log/auth.log /var/log/secure /var/log/messages; do
+        if [ -f "$logfile" ]; then
+            echo "✅ $logfile exists"
+            recent_failures=$(grep -i "failed password\|authentication failure" "$logfile" | tail -5)
+            if [ -n "$recent_failures" ]; then
+                echo "   Recent failures:"
+                echo "$recent_failures" | sed 's/^/   /'
+            fi
+        else
+            echo "❌ $logfile not found"
+        fi
+    done
+    
+    # Check fail2ban log
+    echo ""
+    echo "🔍 Fail2ban Log (last 10 lines):"
+    if [ -f "/var/log/fail2ban.log" ]; then
+        tail -10 /var/log/fail2ban.log
+    else
+        echo "❌ Fail2ban log not found"
+    fi
 }
 
 # Check command line arguments
@@ -171,6 +196,53 @@ elif [ "$1" = "--fix-icmp" ]; then
 elif [ "$1" = "--status" ]; then
     show_status
     exit 0
+elif [ "$1" = "--debug" ]; then
+    echo "🔍 FAIL2BAN DEBUG MODE"
+    echo "======================"
+    
+    echo ""
+    echo "📋 Checking SSH log files..."
+    for logfile in /var/log/auth.log /var/log/secure /var/log/messages; do
+        if [ -f "$logfile" ]; then
+            echo "✅ $logfile exists"
+            echo "   Size: $(ls -lh $logfile | awk '{print $5}')"
+            echo "   Last modified: $(ls -l $logfile | awk '{print $6, $7, $8}')"
+            echo "   Recent SSH failures:"
+            grep -i "failed password\|authentication failure" "$logfile" | tail -3 | sed 's/^/   /'
+        else
+            echo "❌ $logfile not found"
+        fi
+        echo ""
+    done
+    
+    echo "🔧 Checking fail2ban configuration..."
+    echo "Jail configuration:"
+    fail2ban-client get sshd logpath
+    fail2ban-client get sshd maxretry
+    fail2ban-client get sshd findtime
+    
+    echo ""
+    echo "📊 Current fail2ban status:"
+    fail2ban-client status sshd
+    
+    echo ""
+    echo "🔍 Recent fail2ban log:"
+    if [ -f "/var/log/fail2ban.log" ]; then
+        tail -20 /var/log/fail2ban.log
+    else
+        echo "❌ Fail2ban log not found"
+    fi
+    
+    echo ""
+    echo "🔄 Restarting fail2ban to reload configuration..."
+    systemctl restart fail2ban
+    sleep 2
+    
+    echo ""
+    echo "📊 Status after restart:"
+    fail2ban-client status sshd
+    
+    exit 0
 elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "FAIL2BAN COMPLETE SETUP SCRIPT"
     echo "=============================="
@@ -180,6 +252,7 @@ elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  sudo bash fail2ban.sh --test-telegram    # Test Telegram notifications"
     echo "  sudo bash fail2ban.sh --fix-icmp         # Fix ICMP blocking"
     echo "  sudo bash fail2ban.sh --status           # Show current status"
+    echo "  sudo bash fail2ban.sh --debug            # Debug fail2ban issues"
     echo "  sudo bash fail2ban.sh --help             # Show this help"
     echo ""
     echo "Features:"
@@ -287,6 +360,10 @@ maxretry = 2
 findtime = 600
 bantime = -1  # permanent ban
 action = iptables-multiport[name=SSH, port="ssh,22"], iptables-icmp-block[name=ICMP, protocol=all]${telegram_action}
+# Additional log paths for different systems
+logpath = /var/log/auth.log
+logpath = /var/log/secure
+logpath = /var/log/messages
 
 # Custom jail untuk memblokir ICMP (ping) dari IP yang di-ban
 [icmp-block]
