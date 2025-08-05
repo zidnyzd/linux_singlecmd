@@ -30,6 +30,16 @@ check_os_version() {
     fi
 }
 
+# Load variables from .vars file
+if [ -f ".vars" ]; then
+    source .vars
+    echo "Loaded Telegram bot configuration from .vars file"
+else
+    echo "Warning: .vars file not found. Telegram notifications will be disabled."
+    bot_token=""
+    telegram_id=""
+fi
+
 # Check OS version
 check_os_version
 
@@ -76,7 +86,101 @@ logpath = /var/log/auth.log
 maxretry = 2
 findtime = 600
 bantime = -1  # permanent ban
+action = iptables-multiport[name=SSH, port="ssh,22"]
+            iptables-icmp-block[name=ICMP, protocol=all]
+            telegram-notify[name=SSH]
+
+# Custom jail untuk memblokir ICMP (ping) dari IP yang di-ban
+[icmp-block]
+enabled = true
+filter = icmp-block
+logpath = /var/log/fail2ban.log
+maxretry = 1
+findtime = 60
+bantime = -1  # permanent ban
+port = all
+protocol = all
+action = iptables-icmp-block[name=ICMP, protocol=all]
+            telegram-notify[name=ICMP]
 EOL
+
+# Membuat filter untuk ICMP blocking
+echo "Creating ICMP block filter..."
+cat <<EOL > /etc/fail2ban/filter.d/icmp-block.conf
+[Definition]
+failregex = ^.*SRC=<HOST>.*PROTO=ICMP.*$
+ignoreregex =
+EOL
+
+# Membuat action untuk memblokir ICMP
+echo "Creating ICMP block action..."
+cat <<EOL > /etc/fail2ban/action.d/iptables-icmp-block.conf
+[Definition]
+actionstart = iptables -N fail2ban-icmp-block
+actionstop = iptables -F fail2ban-icmp-block && iptables -X fail2ban-icmp-block
+actioncheck = iptables -n -L fail2ban-icmp-block | grep -q '^REJECT'
+actionban = iptables -I fail2ban-icmp-block 1 -s <ip> -j REJECT
+actionunban = iptables -D fail2ban-icmp-block -s <ip> -j REJECT
+EOL
+
+# Membuat action untuk Telegram notification
+echo "Creating Telegram notification action..."
+cat <<EOL > /etc/fail2ban/action.d/telegram-notify.conf
+[Definition]
+actionstart = 
+actionstop = 
+actioncheck = 
+actionban = curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \\
+            -d "chat_id=${telegram_id}" \\
+            -d "text=🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: <ip>%0A🔴 Jail: <name>%0A🔴 Action: BANNED%0A🔴 Time: \$(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: \$(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity."
+actionunban = curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \\
+              -d "chat_id=${telegram_id}" \\
+              -d "text=✅ FAIL2BAN UNBAN ✅%0A%0A🟢 IP Address: <ip>%0A🟢 Jail: <name>%0A🟢 Action: UNBANNED%0A🟢 Time: \$(date '+%Y-%m-%d %H:%M:%S')%0A🟢 Server: \$(hostname)"
+EOL
+
+# Menambahkan rule iptables untuk ICMP blocking
+echo "Adding iptables rules for ICMP blocking..."
+iptables -C INPUT -p icmp -j fail2ban-icmp-block 2>/dev/null || iptables -I INPUT -p icmp -j fail2ban-icmp-block
+
+# Membuat script untuk memastikan ICMP blocking tetap aktif
+echo "Creating ICMP block maintenance script..."
+cat <<EOL > /usr/local/bin/fail2ban-icmp-maintain.sh
+#!/bin/bash
+# Script untuk memastikan ICMP blocking tetap aktif
+
+# Memastikan chain fail2ban-icmp-block ada
+iptables -L fail2ban-icmp-block >/dev/null 2>&1 || iptables -N fail2ban-icmp-block
+
+# Memastikan rule ICMP ada di INPUT chain
+iptables -C INPUT -p icmp -j fail2ban-icmp-block >/dev/null 2>&1 || iptables -I INPUT -p icmp -j fail2ban-icmp-block
+
+# Memastikan semua IP yang di-ban SSH juga di-blokir ICMP
+fail2ban-client get sshd banned | while read ip; do
+    iptables -C fail2ban-icmp-block -s \$ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s \$ip -j REJECT
+done
+EOL
+
+chmod +x /usr/local/bin/fail2ban-icmp-maintain.sh
+
+# Menambahkan cron job untuk maintenance
+echo "Adding cron job for ICMP block maintenance..."
+(crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/fail2ban-icmp-maintain.sh") | crontab -
+
+# Test Telegram bot jika konfigurasi tersedia
+if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+    echo "Testing Telegram bot notification..."
+    test_message="🧪 FAIL2BAN TEST 🧪%0A%0A✅ Fail2ban has been successfully configured with Telegram notifications%0A✅ Server: $(hostname)%0A✅ Time: $(date '+%Y-%m-%d %H:%M:%S')%0A%0A🔔 You will receive notifications for banned IPs"
+    
+    if curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \
+        -d "chat_id=${telegram_id}" \
+        -d "text=${test_message}" > /dev/null; then
+        echo "✓ Telegram bot test successful"
+    else
+        echo "✗ Telegram bot test failed. Please check your bot token and chat ID"
+    fi
+else
+    echo "⚠️ Telegram notifications disabled - bot token or chat ID not configured"
+fi
 
 # Restart dan aktifkan fail2ban
 echo "Restarting fail2ban service..."
@@ -91,12 +195,43 @@ if ! systemctl enable fail2ban; then
 fi
 
 # Periksa status fail2ban
-echo "Fail2ban has been installed and configured for permanent ban."
+echo "Fail2ban has been installed and configured for permanent ban with ICMP blocking and Telegram notifications."
 fail2ban-client status sshd
+
+# Tampilkan informasi ICMP blocking
+echo ""
+echo "=== ICMP Blocking Status ==="
+echo "Checking ICMP block chain..."
+if iptables -L fail2ban-icmp-block >/dev/null 2>&1; then
+    echo "✓ ICMP block chain is active"
+    echo "Banned IPs in ICMP block chain:"
+    iptables -L fail2ban-icmp-block -n | grep REJECT | awk '{print $4}' | sort -u
+else
+    echo "✗ ICMP block chain not found"
+fi
+
+# Tampilkan status Telegram notifications
+echo ""
+echo "=== Telegram Notification Status ==="
+if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+    echo "✓ Telegram notifications enabled"
+    echo "Bot Token: ${bot_token:0:20}..."
+    echo "Chat ID: $telegram_id"
+else
+    echo "✗ Telegram notifications disabled"
+    echo "Please configure bot_token and telegram_id in .vars file"
+fi
 
 # Verify installation
 if systemctl is-active --quiet fail2ban; then
-    echo "Fail2ban is running successfully"
+    echo ""
+    echo "✓ Fail2ban is running successfully"
+    echo ""
+    echo "🎉 Setup Complete! Your fail2ban is now configured with:"
+    echo "   • SSH protection with permanent bans"
+    echo "   • ICMP (ping) blocking for banned IPs"
+    echo "   • Telegram notifications for security alerts"
+    echo "   • Automatic maintenance every 5 minutes"
 else
     echo "Warning: Fail2ban service is not running"
     exit 1
