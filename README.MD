@@ -106,7 +106,7 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
 
 - **WebSocket Fix**
   ```bash
-  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x ws.sh && ./fix_ws.sh
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
   ```
 
 - **DNS TLS**
