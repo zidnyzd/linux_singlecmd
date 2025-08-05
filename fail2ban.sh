@@ -11,6 +11,186 @@
 # - Semua dalam satu script (tidak perlu script tambahan)
 # =============================================================================
 
+# Function untuk test Telegram notifications
+test_telegram() {
+    echo "🧪 Testing Telegram Notifications..."
+    
+    # Load variables from .vars file
+    if [ -f ".vars" ]; then
+        source .vars
+        echo "Loaded Telegram bot configuration from .vars file"
+    else
+        echo "Error: .vars file not found"
+        exit 1
+    fi
+    
+    # Test 1: Basic connectivity
+    echo "Test 1: Basic Telegram connectivity..."
+    test_message="🧪 FAIL2BAN TELEGRAM TEST 🧪%0A%0A✅ Basic connectivity test%0A✅ Server: $(hostname)%0A✅ Time: $(date '+%Y-%m-%d %H:%M:%S')%0A%0A🔔 This is a test message to verify Telegram notifications are working."
+    
+    if curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \
+        -d "chat_id=${telegram_id}" \
+        -d "text=${test_message}" > /dev/null; then
+        echo "✅ Test 1 PASSED: Basic connectivity works"
+    else
+        echo "❌ Test 1 FAILED: Basic connectivity failed"
+        exit 1
+    fi
+    
+    # Test 2: Simulate ban notification
+    echo "Test 2: Simulating ban notification..."
+    ban_message="🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: 192.168.1.100%0A🔴 Jail: SSH%0A🔴 Action: BANNED%0A🔴 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: $(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity.%0A%0A🛡️ ICMP blocking also activated for this IP.%0A%0A🧪 This is a TEST notification"
+    
+    if curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \
+        -d "chat_id=${telegram_id}" \
+        -d "text=${ban_message}" > /dev/null; then
+        echo "✅ Test 2 PASSED: Ban notification format works"
+    else
+        echo "❌ Test 2 FAILED: Ban notification failed"
+    fi
+    
+    # Test 3: Check fail2ban action configuration
+    echo "Test 3: Checking fail2ban action configuration..."
+    if fail2ban-client get sshd actions | grep -q "telegram-notify"; then
+        echo "✅ Test 3 PASSED: Telegram action is configured in fail2ban"
+    else
+        echo "❌ Test 3 FAILED: Telegram action not found in fail2ban"
+        echo "Current actions:"
+        fail2ban-client get sshd actions
+    fi
+    
+    # Test 4: Check action file
+    echo "Test 4: Checking action file..."
+    if [ -f "/etc/fail2ban/action.d/telegram-notify.conf" ]; then
+        echo "✅ Test 4 PASSED: Action file exists"
+        echo "Action file contents:"
+        cat /etc/fail2ban/action.d/telegram-notify.conf
+    else
+        echo "❌ Test 4 FAILED: Action file not found"
+    fi
+    
+    echo ""
+    echo "🎉 Telegram notification test completed!"
+    echo "Check your Telegram for test messages."
+}
+
+# Function untuk fix ICMP blocking
+fix_icmp() {
+    echo "🔧 Fixing ICMP blocking for banned IPs..."
+    
+    # Memastikan chain fail2ban-icmp-block ada
+    iptables -L fail2ban-icmp-block >/dev/null 2>&1 || iptables -N fail2ban-icmp-block
+    
+    # Memastikan rule ICMP ada di INPUT chain
+    iptables -C INPUT -p icmp -j fail2ban-icmp-block >/dev/null 2>&1 || iptables -I INPUT -p icmp -j fail2ban-icmp-block
+    
+    # Ambil semua IP yang di-ban dari fail2ban
+    echo "📋 Getting banned IPs from fail2ban..."
+    banned_status=$(fail2ban-client status sshd | grep "Banned IP list:")
+    if [ -n "$banned_status" ]; then
+        # Extract IPs using improved method
+        banned_ips=$(echo "$banned_status" | sed 's/.*Banned IP list:[[:space:]]*//' | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+        
+        if [ -n "$banned_ips" ]; then
+            echo "Found banned IPs: $banned_ips"
+            ip_count=0
+            
+            for ip in $banned_ips; do
+                echo "➕ Adding $ip to ICMP block chain..."
+                iptables -C fail2ban-icmp-block -s $ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s $ip -j REJECT
+                ((ip_count++))
+            done
+            
+            echo "✅ Successfully added $ip_count IPs to ICMP block chain"
+            echo ""
+            echo "📊 Current ICMP block chain:"
+            iptables -L fail2ban-icmp-block -n
+        else
+            echo "❌ No valid IPs found in banned list"
+        fi
+    else
+        echo "❌ No banned IPs found"
+    fi
+}
+
+# Function untuk show status
+show_status() {
+    echo "📊 FAIL2BAN STATUS REPORT"
+    echo "=========================="
+    
+    # Check fail2ban service
+    echo ""
+    echo "🔧 Fail2ban Service:"
+    if systemctl is-active --quiet fail2ban; then
+        echo "✅ Fail2ban is running"
+        fail2ban-client status sshd
+    else
+        echo "❌ Fail2ban is not running"
+    fi
+    
+    # Check ICMP blocking
+    echo ""
+    echo "🛡️ ICMP Blocking Status:"
+    if iptables -L fail2ban-icmp-block >/dev/null 2>&1; then
+        echo "✅ ICMP block chain is active"
+        banned_in_chain=$(iptables -L fail2ban-icmp-block -n | grep REJECT | awk '{print $4}' | sort -u)
+        if [ -n "$banned_in_chain" ]; then
+            echo "📋 Banned IPs in ICMP chain:"
+            echo "$banned_in_chain"
+        else
+            echo "⚠️ No IPs in ICMP block chain"
+        fi
+    else
+        echo "❌ ICMP block chain not found"
+    fi
+    
+    # Check Telegram configuration
+    echo ""
+    echo "📱 Telegram Configuration:"
+    if [ -f ".vars" ]; then
+        source .vars
+        if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+            echo "✅ Telegram credentials configured"
+            echo "Bot Token: ${bot_token:0:20}..."
+            echo "Chat ID: $telegram_id"
+        else
+            echo "❌ Telegram credentials not found"
+        fi
+    else
+        echo "❌ .vars file not found"
+    fi
+}
+
+# Check command line arguments
+if [ "$1" = "--test-telegram" ]; then
+    test_telegram
+    exit 0
+elif [ "$1" = "--fix-icmp" ]; then
+    fix_icmp
+    exit 0
+elif [ "$1" = "--status" ]; then
+    show_status
+    exit 0
+elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "FAIL2BAN COMPLETE SETUP SCRIPT"
+    echo "=============================="
+    echo ""
+    echo "Usage:"
+    echo "  sudo bash fail2ban.sh                    # Install/Setup fail2ban"
+    echo "  sudo bash fail2ban.sh --test-telegram    # Test Telegram notifications"
+    echo "  sudo bash fail2ban.sh --fix-icmp         # Fix ICMP blocking"
+    echo "  sudo bash fail2ban.sh --status           # Show current status"
+    echo "  sudo bash fail2ban.sh --help             # Show this help"
+    echo ""
+    echo "Features:"
+    echo "  • SSH protection with permanent bans"
+    echo "  • ICMP (ping) blocking for banned IPs"
+    echo "  • Telegram notifications for security alerts"
+    echo "  • Automatic maintenance every 5 minutes"
+    echo "  • All-in-one script (no additional files needed)"
+    exit 0
+fi
+
 # Memastikan script dijalankan dengan hak akses root
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
@@ -150,7 +330,7 @@ actionstop =
 actioncheck = 
 actionban = curl -s -X POST "https://api.telegram.org/botBOT_TOKEN_HERE/sendMessage" \
             -d "chat_id=CHAT_ID_HERE" \
-            -d "text=🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: <ip>%0A🔴 Jail: <name>%0A🔴 Action: BANNED%0A🔴 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: $(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity."
+            -d "text=🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: <ip>%0A🔴 Jail: <name>%0A🔴 Action: BANNED%0A🔴 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: $(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity.%0A%0A🛡️ ICMP blocking also activated for this IP."
 actionunban = curl -s -X POST "https://api.telegram.org/botBOT_TOKEN_HERE/sendMessage" \
               -d "chat_id=CHAT_ID_HERE" \
               -d "text=✅ FAIL2BAN UNBAN ✅%0A%0A🟢 IP Address: <ip>%0A🟢 Jail: <name>%0A🟢 Action: UNBANNED%0A🟢 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🟢 Server: $(hostname)"
@@ -192,12 +372,19 @@ iptables -C INPUT -p icmp -j fail2ban-icmp-block >/dev/null 2>&1 || iptables -I 
 
 # Memastikan semua IP yang di-ban SSH juga di-blokir ICMP
 echo "Syncing banned IPs to ICMP block chain..."
-fail2ban-client status sshd | grep "Banned IP list:" | sed 's/.*Banned IP list:[[:space:]]*//' | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | while read ip; do
-    if [ -n "\$ip" ]; then
-        iptables -C fail2ban-icmp-block -s \$ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s \$ip -j REJECT
-        echo "Added \$ip to ICMP block chain"
+banned_status=\$(fail2ban-client status sshd | grep "Banned IP list:")
+if [ -n "\$banned_status" ]; then
+    existing_banned_ips=\$(echo "\$banned_status" | sed 's/.*Banned IP list:[[:space:]]*//' | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    
+    if [ -n "\$existing_banned_ips" ]; then
+        for ip in \$existing_banned_ips; do
+            if [ -n "\$ip" ]; then
+                iptables -C fail2ban-icmp-block -s \$ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s \$ip -j REJECT
+                echo "Added \$ip to ICMP block chain"
+            fi
+        done
     fi
-done
+fi
 EOL
 
 chmod +x /usr/local/bin/fail2ban-icmp-maintain.sh
@@ -212,20 +399,28 @@ echo "Running initial ICMP block maintenance..."
 
 # Tambahan: Sync IP yang sudah di-ban ke ICMP chain secara langsung
 echo "Syncing existing banned IPs to ICMP block chain..."
-existing_banned_ips=$(fail2ban-client status sshd | grep "Banned IP list:" | sed 's/.*Banned IP list:[[:space:]]*//' | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
-
-if [ -n "$existing_banned_ips" ]; then
-    echo "Found existing banned IPs: $existing_banned_ips"
-    for ip in $existing_banned_ips; do
-        echo "Adding $ip to ICMP block chain..."
-        iptables -C fail2ban-icmp-block -s $ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s $ip -j REJECT
-    done
-    echo "✅ All existing banned IPs synced to ICMP block chain"
+banned_status=$(fail2ban-client status sshd | grep "Banned IP list:")
+if [ -n "$banned_status" ]; then
+    # Extract IPs using a more robust method
+    existing_banned_ips=$(echo "$banned_status" | sed 's/.*Banned IP list:[[:space:]]*//' | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+    
+    if [ -n "$existing_banned_ips" ]; then
+        echo "Found existing banned IPs: $existing_banned_ips"
+        ip_count=0
+        for ip in $existing_banned_ips; do
+            echo "Adding $ip to ICMP block chain..."
+            iptables -C fail2ban-icmp-block -s $ip -j REJECT >/dev/null 2>&1 || iptables -I fail2ban-icmp-block 1 -s $ip -j REJECT
+            ((ip_count++))
+        done
+        echo "✅ All $ip_count existing banned IPs synced to ICMP block chain"
+    else
+        echo "ℹ️  No valid IPs found in banned list"
+    fi
 else
-    echo "ℹ️  No existing banned IPs found"
+    echo "ℹ️  No banned IPs found"
 fi
 
-# Test Telegram bot jika konfigurasi tersedia
+# Test Telegram bot dan kirim notifikasi IP yang sudah di-ban
 if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
     echo "Testing Telegram bot notification..."
     test_message="🧪 FAIL2BAN TEST 🧪%0A%0A✅ Fail2ban has been successfully configured with Telegram notifications%0A✅ Server: $(hostname)%0A✅ Time: $(date '+%Y-%m-%d %H:%M:%S')%0A%0A🔔 You will receive notifications for banned IPs"
@@ -234,6 +429,27 @@ if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
         -d "chat_id=${telegram_id}" \
         -d "text=${test_message}" > /dev/null; then
         echo "✓ Telegram bot test successful"
+        
+        # Kirim notifikasi untuk IP yang sudah di-ban
+        banned_status=$(fail2ban-client status sshd | grep "Banned IP list:")
+        if [ -n "$banned_status" ]; then
+            banned_ips=$(echo "$banned_status" | sed 's/.*Banned IP list:[[:space:]]*//' | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+            if [ -n "$banned_ips" ]; then
+                echo "Sending notification for existing banned IPs..."
+                ip_count=0
+                for ip in $banned_ips; do
+                    ((ip_count++))
+                done
+                
+                existing_ban_message="🚨 EXISTING BANNED IPS 🚨%0A%0A🔴 Server: $(hostname)%0A🔴 Total Banned IPs: $ip_count%0A🔴 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A%0A📋 Banned IP List:%0A$(echo "$banned_ips" | tr ' ' '\n' | sed 's/^/• /')%0A%0A⚠️ These IPs were already banned before setup"
+                
+                curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \
+                    -d "chat_id=${telegram_id}" \
+                    -d "text=${existing_ban_message}" > /dev/null
+                
+                echo "✓ Sent notification for $ip_count existing banned IPs"
+            fi
+        fi
     else
         echo "✗ Telegram bot test failed. Please check your bot token and chat ID"
     fi
@@ -246,6 +462,18 @@ echo "Restarting fail2ban service..."
 if ! systemctl restart fail2ban; then
     echo "Failed to restart fail2ban service"
     exit 1
+fi
+
+# Verifikasi action Telegram terdaftar
+echo "Verifying Telegram action configuration..."
+if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+    if fail2ban-client get sshd actions | grep -q "telegram-notify"; then
+        echo "✓ Telegram action is properly configured"
+    else
+        echo "⚠️ Telegram action not found in jail configuration"
+        echo "Checking jail configuration..."
+        fail2ban-client get sshd actions
+    fi
 fi
 
 if ! systemctl enable fail2ban; then
@@ -308,6 +536,18 @@ if systemctl is-active --quiet fail2ban; then
     echo "   ✅ Tests Telegram bot functionality"
     echo ""
     echo "🔧 No additional scripts needed - everything is integrated!"
+    echo ""
+    echo "🧪 To test Telegram notifications, run:"
+    echo "   sudo bash fail2ban.sh --test-telegram"
+    echo ""
+    echo "🔧 To fix ICMP blocking immediately, run:"
+    echo "   sudo bash fail2ban.sh --fix-icmp"
+    echo ""
+    echo "📋 Available commands:"
+    echo "   sudo bash fail2ban.sh                    # Install/Setup fail2ban"
+    echo "   sudo bash fail2ban.sh --test-telegram    # Test Telegram notifications"
+    echo "   sudo bash fail2ban.sh --fix-icmp         # Fix ICMP blocking"
+    echo "   sudo bash fail2ban.sh --status           # Show current status"
 else
     echo "Warning: Fail2ban service is not running"
     exit 1
