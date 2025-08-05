@@ -316,19 +316,44 @@ elif [ "$1" = "--debug" ]; then
     
     echo "🔧 Checking fail2ban configuration..."
     echo "Jail configuration:"
-    fail2ban-client get sshd logpath
-    fail2ban-client get sshd maxretry
-    fail2ban-client get sshd findtime
+    fail2ban-client get sshd logpath 2>/dev/null || echo "Cannot get logpath"
+    fail2ban-client get sshd maxretry 2>/dev/null || echo "Cannot get maxretry"
+    fail2ban-client get sshd findtime 2>/dev/null || echo "Cannot get findtime"
     
     echo ""
     echo "📊 Current fail2ban status:"
-    fail2ban-client status sshd
+    fail2ban-client status sshd 2>/dev/null || echo "Cannot get status"
     
     echo ""
     echo "🔍 Recent fail2ban log:"
     if [ -f "/var/log/fail2ban.log" ]; then
         tail -20 /var/log/fail2ban.log
     else
+        echo "❌ Fail2ban log not found"
+    fi
+    
+    echo ""
+    echo "🔄 Testing fail2ban filter manually..."
+    echo "Testing with recent log entries:"
+    recent_logs=$(grep -i "failed password\|authentication failure" /var/log/auth.log | tail -2)
+    if [ -n "$recent_logs" ]; then
+        echo "$recent_logs"
+        echo ""
+        echo "These should trigger fail2ban if configuration is correct"
+    else
+        echo "No recent failed login attempts found"
+    fi
+    
+    echo ""
+    echo "🔄 Restarting fail2ban to reload configuration..."
+    systemctl restart fail2ban
+    sleep 3
+    
+    echo ""
+    echo "📊 Status after restart:"
+    fail2ban-client status sshd 2>/dev/null || echo "Service not ready"
+    
+    exit 0
         echo "❌ Fail2ban log not found"
     fi
     
@@ -340,6 +365,58 @@ elif [ "$1" = "--debug" ]; then
     echo ""
     echo "📊 Status after restart:"
     fail2ban-client status sshd
+    
+    exit 0
+elif [ "$1" = "--test-manual" ]; then
+    echo "🧪 MANUAL FAIL2BAN TEST"
+    echo "======================="
+    
+    echo ""
+    echo "📋 Testing with recent log entries..."
+    
+    # Get recent failed login attempts
+    recent_failures=$(grep -i "failed password\|authentication failure" /var/log/auth.log | tail -5)
+    
+    if [ -n "$recent_failures" ]; then
+        echo "Recent failed login attempts:"
+        echo "$recent_failures"
+        echo ""
+        
+        # Extract IPs from recent failures
+        recent_ips=$(echo "$recent_failures" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
+        
+        if [ -n "$recent_ips" ]; then
+            echo "IPs from recent failures: $recent_ips"
+            echo ""
+            
+            # Check if these IPs are banned
+            for ip in $recent_ips; do
+                if fail2ban-client get sshd banned | grep -q "$ip"; then
+                    echo "✅ $ip is already banned"
+                else
+                    echo "❌ $ip is NOT banned (should be banned)"
+                fi
+            done
+        fi
+    else
+        echo "No recent failed login attempts found"
+    fi
+    
+    echo ""
+    echo "🔧 Testing fail2ban filter..."
+    
+    # Test fail2ban filter manually
+    if [ -f "/etc/fail2ban/filter.d/sshd.conf" ]; then
+        echo "SSH filter exists"
+        echo "Filter content:"
+        cat /etc/fail2ban/filter.d/sshd.conf
+    else
+        echo "SSH filter not found"
+    fi
+    
+    echo ""
+    echo "📊 Current fail2ban status:"
+    fail2ban-client status sshd 2>/dev/null || echo "Cannot get status"
     
     exit 0
 elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
@@ -354,6 +431,7 @@ elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  sudo bash fail2ban.sh --status           # Show current status"
     echo "  sudo bash fail2ban.sh --restart          # Restart fail2ban properly"
     echo "  sudo bash fail2ban.sh --debug            # Debug fail2ban issues"
+    echo "  sudo bash fail2ban.sh --test-manual      # Test fail2ban detection manually"
     echo "  sudo bash fail2ban.sh --help             # Show this help"
     echo ""
     echo "Features:"
