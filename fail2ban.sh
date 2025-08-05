@@ -196,6 +196,73 @@ elif [ "$1" = "--fix-icmp" ]; then
 elif [ "$1" = "--status" ]; then
     show_status
     exit 0
+elif [ "$1" = "--fix-config" ]; then
+    echo "🔧 Fixing fail2ban configuration..."
+    
+    # Stop fail2ban
+    systemctl stop fail2ban
+    
+    # Backup current config
+    if [ -f "/etc/fail2ban/jail.local" ]; then
+        cp /etc/fail2ban/jail.local /etc/fail2ban/jail.local.backup.$(date +%Y%m%d_%H%M%S)
+        echo "✅ Backed up current configuration"
+    fi
+    
+    # Detect log file
+    if [ -f "/var/log/auth.log" ]; then
+        ssh_logpath="/var/log/auth.log"
+    elif [ -f "/var/log/secure" ]; then
+        ssh_logpath="/var/log/secure"
+    elif [ -f "/var/log/messages" ]; then
+        ssh_logpath="/var/log/messages"
+    else
+        ssh_logpath="/var/log/auth.log"
+    fi
+    
+    # Load Telegram credentials
+    if [ -f ".vars" ]; then
+        source .vars
+        if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+            telegram_action=", telegram-notify[name=SSH]"
+        else
+            telegram_action=""
+        fi
+    else
+        telegram_action=""
+    fi
+    
+    # Create clean configuration
+    cat > /etc/fail2ban/jail.local << EOF
+[DEFAULT]
+bantime = 86400
+findtime = 600
+maxretry = 3
+
+[sshd]
+enabled = true
+port = ssh
+logpath = $ssh_logpath
+maxretry = 2
+findtime = 600
+bantime = -1
+action = iptables-multiport[name=SSH, port="ssh,22"], iptables-icmp-block[name=ICMP, protocol=all]$telegram_action
+EOF
+    
+    echo "✅ Created clean configuration using $ssh_logpath"
+    
+    # Start fail2ban
+    if systemctl start fail2ban; then
+        echo "✅ Fail2ban started successfully"
+        sleep 3
+        echo ""
+        echo "📊 Current status:"
+        fail2ban-client status sshd 2>/dev/null || echo "Service starting..."
+    else
+        echo "❌ Failed to start fail2ban"
+        systemctl status fail2ban
+    fi
+    
+    exit 0
 elif [ "$1" = "--restart" ]; then
     echo "🔄 Restarting fail2ban with proper configuration..."
     
@@ -283,6 +350,7 @@ elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  sudo bash fail2ban.sh                    # Install/Setup fail2ban"
     echo "  sudo bash fail2ban.sh --test-telegram    # Test Telegram notifications"
     echo "  sudo bash fail2ban.sh --fix-icmp         # Fix ICMP blocking"
+    echo "  sudo bash fail2ban.sh --fix-config       # Fix configuration issues"
     echo "  sudo bash fail2ban.sh --status           # Show current status"
     echo "  sudo bash fail2ban.sh --restart          # Restart fail2ban properly"
     echo "  sudo bash fail2ban.sh --debug            # Debug fail2ban issues"
@@ -365,6 +433,22 @@ else
     echo "Warning: Default jail.conf not found"
 fi
 
+# Detect correct log file
+echo "Detecting SSH log file..."
+if [ -f "/var/log/auth.log" ]; then
+    ssh_logpath="/var/log/auth.log"
+    echo "✅ Using /var/log/auth.log"
+elif [ -f "/var/log/secure" ]; then
+    ssh_logpath="/var/log/secure"
+    echo "✅ Using /var/log/secure"
+elif [ -f "/var/log/messages" ]; then
+    ssh_logpath="/var/log/messages"
+    echo "✅ Using /var/log/messages"
+else
+    ssh_logpath="/var/log/auth.log"
+    echo "⚠️ Defaulting to /var/log/auth.log"
+fi
+
 # Set telegram action based on credentials availability
 if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
     telegram_action=", telegram-notify[name=SSH]"
@@ -388,15 +472,11 @@ maxretry = 3
 [sshd]
 enabled = true
 port = ssh
-logpath = /var/log/auth.log
+logpath = ${ssh_logpath}
 maxretry = 2
 findtime = 600
 bantime = -1  # permanent ban
 action = iptables-multiport[name=SSH, port="ssh,22"], iptables-icmp-block[name=ICMP, protocol=all]${telegram_action}
-# Additional log paths for different systems
-logpath = /var/log/auth.log
-logpath = /var/log/secure
-logpath = /var/log/messages
 
 # Custom jail untuk memblokir ICMP (ping) dari IP yang di-ban
 [icmp-block]
@@ -571,7 +651,46 @@ fi
 echo "Restarting fail2ban service..."
 if ! systemctl restart fail2ban; then
     echo "Failed to restart fail2ban service"
-    exit 1
+    echo "Checking fail2ban configuration for errors..."
+    
+    # Check fail2ban configuration
+    if fail2ban-client reload 2>&1 | grep -q "ERROR"; then
+        echo "❌ Configuration error detected. Attempting to fix..."
+        
+        # Backup problematic config
+        cp /etc/fail2ban/jail.local /etc/fail2ban/jail.local.error.$(date +%Y%m%d_%H%M%S)
+        
+        # Create minimal working config
+        cat > /etc/fail2ban/jail.local << 'EOF'
+[DEFAULT]
+bantime = 86400
+findtime = 600
+maxretry = 3
+
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 2
+findtime = 600
+bantime = -1
+EOF
+        
+        echo "✅ Created minimal configuration"
+        
+        # Try to restart again
+        if systemctl restart fail2ban; then
+            echo "✅ Fail2ban started with minimal config"
+        else
+            echo "❌ Still failed to start fail2ban"
+            systemctl status fail2ban
+            exit 1
+        fi
+    else
+        echo "❌ Unknown error starting fail2ban"
+        systemctl status fail2ban
+        exit 1
+    fi
 fi
 
 # Verifikasi action Telegram terdaftar
