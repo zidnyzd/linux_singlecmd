@@ -68,6 +68,15 @@ else
     echo "Warning: Default jail.conf not found"
 fi
 
+# Set telegram action based on credentials availability
+if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+    telegram_action=", telegram-notify[name=SSH]"
+    icmp_telegram_action=", telegram-notify[name=ICMP]"
+else
+    telegram_action=""
+    icmp_telegram_action=""
+fi
+
 # Membuat file jail.local untuk konfigurasi kustom fail2ban
 echo "Creating jail.local for custom configuration..."
 cat <<EOL > /etc/fail2ban/jail.local
@@ -86,9 +95,7 @@ logpath = /var/log/auth.log
 maxretry = 2
 findtime = 600
 bantime = -1  # permanent ban
-action = iptables-multiport[name=SSH, port="ssh,22"]
-            iptables-icmp-block[name=ICMP, protocol=all]
-            telegram-notify[name=SSH]
+action = iptables-multiport[name=SSH, port="ssh,22"], iptables-icmp-block[name=ICMP, protocol=all]${telegram_action}
 
 # Custom jail untuk memblokir ICMP (ping) dari IP yang di-ban
 [icmp-block]
@@ -100,8 +107,7 @@ findtime = 60
 bantime = -1  # permanent ban
 port = all
 protocol = all
-action = iptables-icmp-block[name=ICMP, protocol=all]
-            telegram-notify[name=ICMP]
+action = iptables-icmp-block[name=ICMP, protocol=all]${icmp_telegram_action}
 EOL
 
 # Membuat filter untuk ICMP blocking
@@ -124,22 +130,41 @@ actionunban = iptables -D fail2ban-icmp-block -s <ip> -j REJECT
 EOL
 
 # Membuat action untuk Telegram notification
-echo "Creating Telegram notification action..."
-cat <<EOL > /etc/fail2ban/action.d/telegram-notify.conf
+if [ -n "$bot_token" ] && [ -n "$telegram_id" ]; then
+    echo "Creating Telegram notification action..."
+    cat > /etc/fail2ban/action.d/telegram-notify.conf << 'EOF'
 [Definition]
 actionstart = 
 actionstop = 
 actioncheck = 
-actionban = curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \\
-            -d "chat_id=${telegram_id}" \\
-            -d "text=🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: <ip>%0A🔴 Jail: <name>%0A🔴 Action: BANNED%0A🔴 Time: \$(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: \$(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity."
-actionunban = curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" \\
-              -d "chat_id=${telegram_id}" \\
-              -d "text=✅ FAIL2BAN UNBAN ✅%0A%0A🟢 IP Address: <ip>%0A🟢 Jail: <name>%0A🟢 Action: UNBANNED%0A🟢 Time: \$(date '+%Y-%m-%d %H:%M:%S')%0A🟢 Server: \$(hostname)"
-EOL
+actionban = curl -s -X POST "https://api.telegram.org/botBOT_TOKEN_HERE/sendMessage" \
+            -d "chat_id=CHAT_ID_HERE" \
+            -d "text=🚨 FAIL2BAN ALERT 🚨%0A%0A🔴 IP Address: <ip>%0A🔴 Jail: <name>%0A🔴 Action: BANNED%0A🔴 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🔴 Server: $(hostname)%0A%0A⚠️ This IP has been permanently banned for suspicious activity."
+actionunban = curl -s -X POST "https://api.telegram.org/botBOT_TOKEN_HERE/sendMessage" \
+              -d "chat_id=CHAT_ID_HERE" \
+              -d "text=✅ FAIL2BAN UNBAN ✅%0A%0A🟢 IP Address: <ip>%0A🟢 Jail: <name>%0A🟢 Action: UNBANNED%0A🟢 Time: $(date '+%Y-%m-%d %H:%M:%S')%0A🟢 Server: $(hostname)"
+EOF
+
+    # Replace placeholders with actual values
+    sed -i "s/BOT_TOKEN_HERE/$bot_token/g" /etc/fail2ban/action.d/telegram-notify.conf
+    sed -i "s/CHAT_ID_HERE/$telegram_id/g" /etc/fail2ban/action.d/telegram-notify.conf
+else
+    echo "Warning: Telegram credentials not found, creating dummy action file..."
+    cat > /etc/fail2ban/action.d/telegram-notify.conf << 'EOF'
+[Definition]
+actionstart = 
+actionstop = 
+actioncheck = 
+actionban = echo "Telegram notification disabled - no credentials configured"
+actionunban = echo "Telegram notification disabled - no credentials configured"
+EOF
+fi
 
 # Menambahkan rule iptables untuk ICMP blocking
 echo "Adding iptables rules for ICMP blocking..."
+# Create the chain if it doesn't exist
+iptables -L fail2ban-icmp-block >/dev/null 2>&1 || iptables -N fail2ban-icmp-block
+# Add the rule to INPUT chain if it doesn't exist
 iptables -C INPUT -p icmp -j fail2ban-icmp-block 2>/dev/null || iptables -I INPUT -p icmp -j fail2ban-icmp-block
 
 # Membuat script untuk memastikan ICMP blocking tetap aktif
