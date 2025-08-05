@@ -419,6 +419,62 @@ elif [ "$1" = "--test-manual" ]; then
     fail2ban-client status sshd 2>/dev/null || echo "Cannot get status"
     
     exit 0
+elif [ "$1" = "--force-detect" ]; then
+    echo "🔍 FORCE DETECT FAILED LOGINS"
+    echo "============================="
+    
+    echo ""
+    echo "📋 Scanning for failed login attempts in last 24 hours..."
+    
+    # Get failed login attempts from last 24 hours
+    failed_logins=$(grep -i "failed password\|authentication failure" /var/log/auth.log | grep "$(date '+%b %d')")
+    
+    if [ -n "$failed_logins" ]; then
+        echo "Found failed login attempts:"
+        echo "$failed_logins"
+        echo ""
+        
+        # Extract unique IPs
+        unique_ips=$(echo "$failed_logins" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
+        
+        if [ -n "$unique_ips" ]; then
+            echo "Unique IPs with failed attempts: $unique_ips"
+            echo ""
+            
+            # Count attempts per IP
+            for ip in $unique_ips; do
+                attempt_count=$(echo "$failed_logins" | grep -c "$ip")
+                echo "IP: $ip - Failed attempts: $attempt_count"
+                
+                # Check if IP is banned
+                if fail2ban-client get sshd banned | grep -q "$ip"; then
+                    echo "  ✅ Already banned"
+                else
+                    echo "  ❌ NOT banned (should be banned if >= 2 attempts)"
+                    
+                    # Force ban if >= 2 attempts
+                    if [ "$attempt_count" -ge 2 ]; then
+                        echo "  🔧 Force banning $ip..."
+                        fail2ban-client set sshd banip "$ip"
+                        echo "  ✅ Force banned $ip"
+                    fi
+                fi
+            done
+        fi
+    else
+        echo "No failed login attempts found in last 24 hours"
+    fi
+    
+    echo ""
+    echo "🔄 Restarting fail2ban to reload configuration..."
+    systemctl restart fail2ban
+    sleep 3
+    
+    echo ""
+    echo "📊 Status after force detection:"
+    fail2ban-client status sshd 2>/dev/null || echo "Cannot get status"
+    
+    exit 0
 elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "FAIL2BAN COMPLETE SETUP SCRIPT"
     echo "=============================="
@@ -432,6 +488,7 @@ elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  sudo bash fail2ban.sh --restart          # Restart fail2ban properly"
     echo "  sudo bash fail2ban.sh --debug            # Debug fail2ban issues"
     echo "  sudo bash fail2ban.sh --test-manual      # Test fail2ban detection manually"
+    echo "  sudo bash fail2ban.sh --force-detect     # Force detect and ban failed logins"
     echo "  sudo bash fail2ban.sh --help             # Show this help"
     echo ""
     echo "Features:"
