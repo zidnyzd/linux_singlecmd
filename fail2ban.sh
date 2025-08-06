@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo "[🚀] Memulai setup Fail2Ban dengan pemblokiran total dan notifikasi Telegram opsional..."
+echo "[🚀] Memulai setup Fail2Ban dengan blok total IP dan notifikasi Telegram opsional..."
 
-# ========== CEK /root/.vars ==========
+# ===== CEK /root/.vars =====
 TELEGRAM_ENABLED=true
 if [ -f /root/.vars ]; then
     echo "[ℹ️] File /root/.vars sudah ada. Lewati input token Telegram."
 else
-    echo "[❓] Apakah ingin mengaktifkan notifikasi Telegram saat IP diblokir? (y/n)"
+    echo -n "[❓] Aktifkan notifikasi Telegram saat IP diblokir? (y/n): "
     read -r enable_telegram
     if [[ "$enable_telegram" =~ ^[Yy]$ ]]; then
         echo -n "[🔐] Masukkan Bot Token: "
@@ -27,19 +27,19 @@ EOF
     fi
 fi
 
-# ========== INSTALL FAIL2BAN ==========
+# ===== INSTALL FAIL2BAN =====
 echo "[📦] Menginstal Fail2Ban..."
-apt update && apt install fail2ban -y
+apt update -y && apt install fail2ban -y
 
-# ========== ACTION UNTUK BLOK TOTAL ==========
-echo "[🛡️] Membuat action iptables-ban.conf untuk blokir semua trafik..."
+# ===== ACTION iptables-ban =====
+echo "[🛡️] Membuat action iptables-ban.conf untuk blok semua trafik..."
 cat <<'EOF' > /etc/fail2ban/action.d/iptables-ban.conf
 [Definition]
 actionban = /sbin/iptables -I INPUT -s <ip> -j DROP
 actionunban = /sbin/iptables -D INPUT -s <ip> -j DROP
 EOF
 
-# ========== (OPSIONAL) ACTION UNTUK TELEGRAM ==========
+# ===== ACTION telegram-ban (jika diaktifkan) =====
 if [ "$TELEGRAM_ENABLED" = true ]; then
     echo "[📨] Membuat action telegram-ban.conf..."
     cat <<'EOF' > /etc/fail2ban/action.d/telegram-ban.conf
@@ -53,12 +53,12 @@ actionunban = . /root/.vars && curl -s -X POST "https://api.telegram.org/bot${bo
 EOF
 fi
 
-# ========== BUAT JAIL.LOCAL ==========
-echo "[📄] Menyiapkan konfigurasi jail.local..."
+# ===== KONFIGURASI jail.local =====
+echo "[📄] Menyiapkan /etc/fail2ban/jail.local..."
 if [ "$TELEGRAM_ENABLED" = true ]; then
-    ACTION_BLOCK="iptables-ban\n         telegram-ban"
+    ACTION_LINE="iptables-ban, telegram-ban"
 else
-    ACTION_BLOCK="iptables-ban"
+    ACTION_LINE="iptables-ban"
 fi
 
 cat <<EOF > /etc/fail2ban/jail.local
@@ -69,15 +69,24 @@ logpath = /var/log/auth.log
 maxretry = 1
 findtime = 60
 bantime = 86400
-action = $ACTION_BLOCK
+action = $ACTION_LINE
 EOF
 
-# ========== RESTART FAIL2BAN ==========
+# ===== RESTART FAIL2BAN =====
 echo "[🔁] Me-restart Fail2Ban..."
 systemctl restart fail2ban
-fail2ban-client reload
+sleep 3
 
-# ========== SELESAI ==========
+if systemctl is-active --quiet fail2ban; then
+    echo "[✅] Fail2Ban berhasil dijalankan!"
+    fail2ban-client reload
+else
+    echo "[❌] Gagal menjalankan Fail2Ban. Silakan cek dengan:"
+    echo "     sudo journalctl -xeu fail2ban"
+    exit 1
+fi
+
+# ===== DONE =====
 echo ""
 echo "[✅] Setup selesai!"
 echo "• IP yang mencoba login gagal akan diblokir total (semua koneksi)."
@@ -89,3 +98,4 @@ fi
 echo ""
 echo "[🧪] Contoh test:"
 echo "    sudo fail2ban-client set sshd banip 1.2.3.4"
+echo "    sudo iptables -L -n | grep 1.2.3.4"
