@@ -2,6 +2,21 @@
 
 echo "[🚀] Memulai setup Fail2Ban dengan pemblokiran total dan notifikasi Telegram opsional..."
 
+# ========== HARD RESET FAIL2BAN ==========
+echo "[⚠️] Melakukan hard reset Fail2Ban..."
+sudo systemctl stop fail2ban
+sudo apt purge --remove fail2ban -y
+sudo rm -rf /etc/fail2ban
+sudo rm -rf /var/lib/fail2ban
+sudo rm -rf /var/run/fail2ban
+sudo rm -rf /var/log/fail2ban.log
+sudo iptables -D INPUT -j f2b-sshd 2>/dev/null
+sudo iptables -F f2b-sshd 2>/dev/null
+sudo iptables -X f2b-sshd 2>/dev/null
+sudo iptables -L -n --line-numbers
+sudo iptables -F
+sudo iptables -X
+
 # ========== CEK /root/.vars ==========
 TELEGRAM_ENABLED=true
 if [ -f /root/.vars ]; then
