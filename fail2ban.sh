@@ -2,36 +2,6 @@
 
 echo "[🚀] Memulai setup Fail2Ban dengan blok total IP dan notifikasi Telegram opsional..."
 
-# ===== CEK FAIL2BAN YANG SUDAH ADA =====
-if systemctl is-active --quiet fail2ban; then
-    echo "[⚠️]  Fail2Ban sudah berjalan di sistem ini!"
-    echo -n "[❓] Apakah Anda ingin melanjutkan? Ini akan menimpa konfigurasi yang ada (y/n): "
-    read -r continue_setup
-    if [[ ! "$continue_setup" =~ ^[Yy]$ ]]; then
-        echo "[⏹️] Setup dibatalkan."
-        exit 0
-    fi
-    
-    # Backup konfigurasi yang ada
-    echo "[💾] Membuat backup konfigurasi yang ada..."
-    BACKUP_DIR="/etc/fail2ban/backup_$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "$BACKUP_DIR"
-    
-    if [ -f /etc/fail2ban/jail.local ]; then
-        cp /etc/fail2ban/jail.local "$BACKUP_DIR/"
-        echo "[✅] Backup jail.local ke $BACKUP_DIR/"
-    fi
-    
-    if [ -d /etc/fail2ban/action.d ]; then
-        cp -r /etc/fail2ban/action.d "$BACKUP_DIR/"
-        echo "[✅] Backup action.d ke $BACKUP_DIR/"
-    fi
-    
-    echo "[🔄] Menghentikan Fail2Ban yang sedang berjalan..."
-    systemctl stop fail2ban
-    sleep 2
-fi
-
 # ===== CEK /root/.vars =====
 TELEGRAM_ENABLED=true
 if [ -f /root/.vars ]; then
@@ -113,11 +83,6 @@ if systemctl is-active --quiet fail2ban; then
 else
     echo "[❌] Gagal menjalankan Fail2Ban. Silakan cek dengan:"
     echo "     sudo journalctl -xeu fail2ban"
-    echo ""
-    echo "[🔄] Jika ada masalah, Anda dapat restore backup dari:"
-    if [ -n "$BACKUP_DIR" ]; then
-        echo "     $BACKUP_DIR"
-    fi
     exit 1
 fi
 
@@ -131,13 +96,6 @@ else
     echo "• Notifikasi Telegram tidak diaktifkan."
 fi
 echo ""
-if [ -n "$BACKUP_DIR" ]; then
-    echo "[💾] Backup konfigurasi lama tersimpan di: $BACKUP_DIR"
-fi
-echo ""
 echo "[🧪] Contoh test:"
 echo "    sudo fail2ban-client set sshd banip 1.2.3.4"
 echo "    sudo iptables -L -n | grep 1.2.3.4"
-echo ""
-echo "[⚠️]  PERINGATAN: Konfigurasi ini sangat ketat (1x gagal = blokir 24 jam)"
-echo "    Pastikan Anda memiliki akses alternatif ke server!"
