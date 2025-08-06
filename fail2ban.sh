@@ -55,11 +55,7 @@ fi
 
 # ========== BUAT JAIL.LOCAL ==========
 echo "[📄] Menyiapkan konfigurasi jail.local..."
-if [ "$TELEGRAM_ENABLED" = true ]; then
-    ACTION_BLOCK="iptables-ban\n         telegram-ban"
-else
-    ACTION_BLOCK="iptables-ban"
-fi
+rm -f /etc/fail2ban/jail.local
 
 cat <<EOF > /etc/fail2ban/jail.local
 [sshd]
@@ -69,8 +65,13 @@ logpath = /var/log/auth.log
 maxretry = 1
 findtime = 60
 bantime = 86400
-action = $ACTION_BLOCK
+action =
+    iptables-ban
 EOF
+
+if [ "$TELEGRAM_ENABLED" = true ]; then
+    echo "    telegram-ban" >> /etc/fail2ban/jail.local
+fi
 
 # ========== RESTART FAIL2BAN ==========
 echo "[🔁] Me-restart Fail2Ban..."
