@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "[🚀] Memulai setup Fail2Ban dengan blok total IP dan notifikasi Telegram opsional..."
+echo "[🚀] Memulai setup Fail2Ban dengan pemblokiran total dan notifikasi Telegram opsional..."
 
 # ===== CEK /root/.vars =====
 TELEGRAM_ENABLED=true
@@ -32,7 +32,7 @@ echo "[📦] Menginstal Fail2Ban..."
 apt update -y && apt install fail2ban -y
 
 # ===== ACTION iptables-ban =====
-echo "[🛡️] Membuat action iptables-ban.conf untuk blok semua trafik..."
+echo "[🛡️] Membuat action iptables-ban.conf..."
 cat <<'EOF' > /etc/fail2ban/action.d/iptables-ban.conf
 [Definition]
 actionban = /sbin/iptables -I INPUT -s <ip> -j DROP
@@ -53,15 +53,10 @@ actionunban = . /root/.vars && curl -s -X POST "https://api.telegram.org/bot${bo
 EOF
 fi
 
-# ===== KONFIGURASI jail.local =====
+# ===== BUAT jail.local =====
 echo "[📄] Menyiapkan /etc/fail2ban/jail.local..."
 if [ "$TELEGRAM_ENABLED" = true ]; then
-    ACTION_LINE="iptables-ban, telegram-ban"
-else
-    ACTION_LINE="iptables-ban"
-fi
-
-cat <<EOF > /etc/fail2ban/jail.local
+    cat <<EOF > /etc/fail2ban/jail.local
 [sshd]
 enabled = true
 port = ssh
@@ -69,8 +64,21 @@ logpath = /var/log/auth.log
 maxretry = 1
 findtime = 60
 bantime = 86400
-action = $ACTION_LINE
+action = iptables-ban
+         telegram-ban
 EOF
+else
+    cat <<EOF > /etc/fail2ban/jail.local
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 1
+findtime = 60
+bantime = 86400
+action = iptables-ban
+EOF
+fi
 
 # ===== RESTART FAIL2BAN =====
 echo "[🔁] Me-restart Fail2Ban..."
