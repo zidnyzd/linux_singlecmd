@@ -2,6 +2,52 @@
 
 ![Linux Logo](https://raw.githubusercontent.com/torvalds/linux/master/Documentation/logo.gif)
 
+## 🔥 Priority Scripts
+
+Urutan prioritas utama untuk manajemen dan perbaikan server:
+
+1. **Fail2Ban Installation**  
+   Blokir serangan brute force SSH  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+   ```
+
+2. **Kernel Management Tool**  
+   Manajemen kernel Linux  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_kernel.sh && chmod +x fix_kernel.sh && ./fix_kernel.sh
+   ```
+
+3. **Gotop Installation**  
+   System monitor interaktif  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
+   ```
+
+4. **XRAY Fix**  
+   Perbaikan layanan XRAY  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
+   ```
+
+5. **Haproxy Fix**  
+   Perbaikan layanan Haproxy  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_haproxy.sh && chmod +x fix_haproxy.sh && ./fix_haproxy.sh
+   ```
+
+6. **WebSocket Fix**  
+   Perbaikan layanan WebSocket  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
+   ```
+
+7. **SSH Banner Update**  
+   Update banner SSH  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
+   ```
+
 ## 📋 Overview
 
 Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dirancang untuk memudahkan pengelolaan server, meningkatkan keamanan, dan mengoptimalkan performa sistem.
@@ -165,4 +211,4 @@ Kontribusi selalu diterima! Silakan:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-Made with ❤️ for Linux Server Management
+Made with ❤️ for Linux Server
