@@ -28,7 +28,10 @@ cat << 'EOF' > /etc/fightertunnel.txt
   Whatsapp: https://wa.me/+6285184673439<br><br>
   Bot Auto Order VPN/SSH<br>
   https://t.me/zidvpnstorebot<br>
-  Buat Akun Kapan Saja, Online 24/7<br>
+  Buat Akun Kapan Saja, Online 24/7
+  <br>
+  Tembak Paket XL di web https://panel.zidstore.net
+  Top Up Instant 24/7
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
