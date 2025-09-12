@@ -43,13 +43,13 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    ```
 
 7. **Install Dropbear 2018**  
-   Update banner SSH  
+   Downgrade Dropbear
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_dropbear2018.sh && chmod +x install_dropbear2018.sh && ./install_dropbear2018.sh
    ```
 
 8. **FIX DPKG Debian Exim**  
-   Update banner SSH  
+   FIX APT BROKEN 
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/errordpkg.sh && chmod +x errordpkg.sh && ./errordpkg.sh
    ```
