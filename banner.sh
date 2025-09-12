@@ -21,33 +21,26 @@ cat << 'EOF' > /etc/fightertunnel.txt
   <font color="white">No Torrent<br>
   No MultiLogin<br>
   No Reshare Account<br>
-  Melanggar? Auto Delete Account<br><br>
-  <b>CONTACT US:</b><br>
-  Telegram: https://t.me/storezid2<br>
-  Telegram Channel: https://t.me/zidstorevpn<br>
-  Whatsapp: https://wa.me/+6285184673439<br><br>
+  Melanggar? Delete Account<br><br>
   Bot Auto Order VPN/SSH<br>
   https://t.me/zidvpnstorebot<br>
-  Buat Akun Kapan Saja, Online 24/7
+  Buat Akun Kapan Saja, Online 24/7<br>
   <br>
-  Tembak Paket XL di web https://panel.zidstore.net
-  Top Up Instant 24/7
+  Tembak Paket XL di Web <br>https://panel.zidstore.net<br>
+  Top Up Instant 24/7<br>
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
   VPS Digital Ocean: https://t.me/zidstorevpn/17<br>
-  Tembak Paket XL XUTS, XUTP, XCV, XCP, Akrab, Masa Aktif 1 Tahun, dll : https://t.me/zidstorevpn/19<br>
+  Tembak Paket XL VIDIO, IFLIX, XCV, Akrab, Akrab Bekasan, Masa Aktif 1 Tahun, dll : https://t.me/zidstorevpn/19<br>
+  <br><b>CONTACT US:</b><br>
+  Telegram: https://t.me/storezid2<br>
+  Telegram Channel: https://t.me/zidstorevpn<br>
+  Whatsapp: https://wa.me/+6285184673439<br><br>
   </font>
 </div>
 EOF
 
-# Set permission agar bisa dibaca
-chmod 644 /etc/fightertunnel.txt
-
-# Restart services
-systemctl restart sshd
 systemctl restart dropbear
-systemctl restart ws
-systemctl restart badvpn
 
 echo "Banner SSH telah diperbarui!"
