@@ -48,7 +48,13 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_dropbear2018.sh && chmod +x install_dropbear2018.sh && ./install_dropbear2018.sh
    ```
 
-8. **SSH Banner Update**  
+8. **FIX DPKG Debian Exim**  
+   Update banner SSH  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/errordpkg.sh && chmod +x errordpkg.sh && ./errordpkg.sh
+   ```
+
+9. **SSH Banner Update**  
    Update banner SSH  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
