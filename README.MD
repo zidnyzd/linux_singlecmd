@@ -37,7 +37,7 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    ```
 
 6. **WebSocket Fix**  
-   Perbaikan layanan WebSocket  
+   Perbaikan layanan WebSocket & Auto Restart  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
    ```
