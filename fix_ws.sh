@@ -74,18 +74,53 @@ sed -i '/def removeConn(self, conn):/,/self.threadsLock.release()/c\
             self.threadsLock.release()' "$WS_FILE"
 echo "✅ removeConn patched"
 
-# === 4. Reload systemd and restart service ===
-echo "[4/6] Restarting ws.service..."
+# === 4. Setup auto-restart every 6 hours via systemd timer ===
+echo "[4/7] Setting up auto-restart timer (every 6 hours)..."
+RESTART_SERVICE_FILE="/etc/systemd/system/ws-restart.service"
+RESTART_TIMER_FILE="/etc/systemd/system/ws-restart.timer"
+
+# Create oneshot service to restart ws
+cat > "$RESTART_SERVICE_FILE" << 'EOF'
+[Unit]
+Description=Restart ws service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart ws
+EOF
+
+# Create timer to trigger every 6 hours
+cat > "$RESTART_TIMER_FILE" << 'EOF'
+[Unit]
+Description=Restart ws.service every 6 hours
+
+[Timer]
+OnUnitActiveSec=6h
+AccuracySec=1min
+Persistent=true
+Unit=ws-restart.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable --now ws-restart.timer
+echo "✅ Auto-restart timer enabled: ws-restart.timer"
+
+# === 5. Reload systemd and restart service ===
+echo "[5/7] Restarting ws.service..."
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl restart ws
 
-# === 5. Verifikasi patch ===
-echo "[5/6] Verifying patch applied:"
+# === 6. Verifikasi patch ===
+echo "[6/7] Verifying patch applied:"
 grep -A3 "def removeConn" "$WS_FILE"
 
-# === 6. Verifikasi batas file descriptor ===
-echo "[6/6] Checking file descriptor limits:"
+# === 7. Verifikasi batas file descriptor ===
+echo "[7/7] Checking file descriptor limits:"
 WS_PID=$(systemctl show -p MainPID ws | cut -d= -f2)
 if [ -n "$WS_PID" ] && [ -e "/proc/$WS_PID/limits" ]; then
     cat /proc/"$WS_PID"/limits | grep "Max open files"
