@@ -22,17 +22,21 @@ cat << 'EOF' > /etc/fightertunnel.txt
   No MultiLogin<br>
   No Reshare Account<br>
   Melanggar? Delete Account<br><br>
-  Bot Auto Order VPN/SSH<br>
+  Bot Auto Order SSH, VMess, VLESS, Trojan.<br>
   https://t.me/zidvpnstorebot<br>
-  Buat Akun Kapan Saja, Online 24/7<br>
+  Buat Akun Kapan Saja, Pilih hari sesuai keinginanmu
+  <br> 
+  BOT Online 24/7<br>
   <br>
   Tembak Paket XL di Web <br>https://panel.zidstore.net<br>
   Top Up Instant 24/7<br>
   <br>
+  Paket XL yang Tersedia di Web :<br>
+  XL HYFE, XL BIZ Lite, BIZ Starter, BIZ E-Commerce, Xtra Combo VIP Double YouTube, XL Circle, Akrab, Akrab Bekasan, Masa Aktif 1 Tahun, dan banyak lagi<br>
+  <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
   VPS Digital Ocean: https://t.me/zidstorevpn/17<br>
-  Tembak Paket XL VIDIO, IFLIX, XCV, Akrab, Akrab Bekasan, Masa Aktif 1 Tahun, dll : https://t.me/zidstorevpn/19<br>
   <br><b>CONTACT US:</b><br>
   Telegram: https://t.me/storezid2<br>
   Telegram Channel: https://t.me/zidstorevpn<br>
