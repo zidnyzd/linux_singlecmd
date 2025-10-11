@@ -179,7 +179,7 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
 
 - **SSH Banner Update**
   ```bash
-  wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
+  rm banner.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
   ```
 
 ## 📝 Usage Instructions
