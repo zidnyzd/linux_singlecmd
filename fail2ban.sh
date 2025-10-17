@@ -297,8 +297,8 @@ if [ "$TELEGRAM_ENABLED" = true ]; then
 actionstart =
 actionstop  =
 actioncheck =
-actionban   = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message ban <ip> <name>)" fail2ban-sshd
-actionunban = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message unban <ip> <name>)" fail2ban-sshd
+actionban   = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message ban <ip> <name>)" fail2ban-sshd-v2
+actionunban = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message unban <ip> <name>)" fail2ban-sshd-v2
 [Init]
 EOF
 fi
