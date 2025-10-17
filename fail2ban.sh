@@ -152,6 +152,18 @@ extract_message_id() {
 
 now_ts() { date +%s; }
 
+readable_now() { date '+%Y-%m-%d %H:%M:%S %Z'; }
+
+ban_count_from_file() {
+  # Count lines that start with ban icon
+  grep -c '^🚫' 2>/dev/null || true
+}
+
+strip_footer() {
+  # Remove footer lines if exist
+  sed -e '/^Terakhir diperbarui:/d' -e '/^Total IP diblokir:/d'
+}
+
 rotate_if_needed() {
   local text_len
   text_len=$(wc -c <"${MSG_FILE}" 2>/dev/null || echo 0)
@@ -192,10 +204,16 @@ case "${MODE}" in
       exit 0
     fi
 
-    # Append to existing message and edit
+    # Append to existing message and edit with footer (last updated + total bans)
     echo "[tg_notify] Mengedit pesan ID: ${message_id} untuk key: ${KEY}" >&2
     { echo "${TEXT}"; echo; } >>"${MSG_FILE}"
-    RESP=$(edit_message "${message_id}" "$(cat "${MSG_FILE}")") || true
+    # Build body without old footer
+    BODY=$(strip_footer <"${MSG_FILE}")
+    TOTAL=$(grep -c '^🚫' "${MSG_FILE}" 2>/dev/null || echo 0)
+    FOOTER=$'Terakhir diperbarui: '"$(readable_now)"$'\nTotal IP diblokir: '"${TOTAL}"
+    RESP=$(edit_message "${message_id}" "${BODY}
+
+${FOOTER}") || true
 
     # Check if edit was successful
     if grep -q '"ok"[[:space:]]*:[[:space:]]*true' <<<"${RESP}"; then
