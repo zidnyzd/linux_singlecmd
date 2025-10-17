@@ -221,6 +221,59 @@ case "${MODE}" in
 esac
 EOF
     sudo chmod +x /usr/local/bin/tg_notify
+    echo "[🧰] Menginstal helper info IP: /usr/local/bin/f2b_build_message"
+    sudo tee /usr/local/bin/f2b_build_message >/dev/null <<'EOF'
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# f2b_build_message <ban|unban> <ip> <jail-name>
+
+EVENT=${1:-}
+IP=${2:-}
+JAIL=${3:-}
+
+if [ -z "${EVENT}" ] || [ -z "${IP}" ] || [ -z "${JAIL}" ]; then
+  echo "Invalid arguments" >&2
+  exit 1
+fi
+
+ICON="🚫"; ACTION="diblokir"
+if [ "${EVENT}" = "unban" ]; then
+  ICON="✅"; ACTION="di-unban"
+fi
+
+ASN_CODE="-"
+ISP_NAME="-"
+
+# Try ip-api.com (fast, no key)
+JSON=$(curl -sS --max-time 5 "http://ip-api.com/json/${IP}?fields=status,as,isp" || true)
+if command -v jq >/dev/null 2>&1 && echo "${JSON}" | jq -e '.status=="success"' >/dev/null 2>&1; then
+  AS_FIELD=$(echo "${JSON}" | jq -r '.as // empty')
+  ISP_NAME=$(echo "${JSON}" | jq -r '.isp // empty')
+  if [ -n "${AS_FIELD}" ]; then
+    ASN_CODE=$(awk '{print $1}' <<<"${AS_FIELD}")
+  fi
+fi
+
+# Fallback to ipinfo if missing
+if [ "${ASN_CODE}" = "-" ] || [ -z "${ASN_CODE}" ]; then
+  JSON2=$(curl -sS --max-time 5 "https://ipinfo.io/${IP}/json" || true)
+  if command -v jq >/dev/null 2>&1 && [ -n "${JSON2}" ]; then
+    ORG=$(echo "${JSON2}" | jq -r '.org // empty')
+    if [ -n "${ORG}" ]; then
+      ASN_CODE=$(awk '{print $1}' <<<"${ORG}")
+      ISP_NAME=$(echo "${ORG}" | sed 's/^[^ ]\+ //')
+    fi
+  fi
+fi
+
+ASN_CODE=${ASN_CODE:--}
+ISP_NAME=${ISP_NAME:--}
+
+printf "%s IP %s %s (jail: %s).\nIP: %s\nASN: %s\nISP: %s" "${ICON}" "${IP}" "${ACTION}" "${JAIL}" "${IP}" "${ASN_CODE}" "${ISP_NAME}"
+EOF
+    sudo chmod +x /usr/local/bin/f2b_build_message
 fi
 
 # Pastikan direktori ada
@@ -244,8 +297,8 @@ if [ "$TELEGRAM_ENABLED" = true ]; then
 actionstart =
 actionstop  =
 actioncheck =
-actionban   = /usr/local/bin/tg_notify append "🚫 IP <ip> diblokir (jail: <name>)." fail2ban-sshd
-actionunban = /usr/local/bin/tg_notify append "✅ IP <ip> di-unban (jail: <name>)." fail2ban-sshd
+actionban   = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message ban <ip> <name>)" fail2ban-sshd
+actionunban = /usr/local/bin/tg_notify append "$(/usr/local/bin/f2b_build_message unban <ip> <name>)" fail2ban-sshd
 [Init]
 EOF
 fi
