@@ -93,8 +93,16 @@ STATE_DIR=/var/tmp
 MSG_FILE="${STATE_DIR}/tg_notify_${KEY}.txt"
 ID_FILE="${STATE_DIR}/tg_notify_${KEY}.msgid"
 TS_FILE="${STATE_DIR}/tg_notify_${KEY}.ts"
+LOCK_FILE="${STATE_DIR}/tg_notify_${KEY}.lock"
 
 mkdir -p "${STATE_DIR}"
+
+# Serialize concurrent invocations for the same KEY to avoid duplicate send
+exec {LOCK_FD}>"${LOCK_FILE}"
+flock -w 10 "${LOCK_FD}" || {
+  echo "[tg_notify] tidak bisa mendapatkan lock untuk ${KEY}" >&2
+  exit 1
+}
 
 api_url() {
   echo "https://api.telegram.org/bot${BOT_TOKEN}/$1"
@@ -105,11 +113,13 @@ send_message() {
     curl -sS -X POST "$(api_url sendMessage)" \
       -d chat_id="${CHAT_ID}" \
       -d message_thread_id="${THREAD_ID}" \
-      --data-urlencode text@- <<<"$1"
+      -d disable_web_page_preview=true \
+      --data-urlencode "text=$1"
   else
     curl -sS -X POST "$(api_url sendMessage)" \
       -d chat_id="${CHAT_ID}" \
-      --data-urlencode text@- <<<"$1"
+      -d disable_web_page_preview=true \
+      --data-urlencode "text=$1"
   fi
 }
 
@@ -119,12 +129,14 @@ edit_message() {
     curl -sS -X POST "$(api_url editMessageText)" \
       -d chat_id="${CHAT_ID}" \
       -d message_id="${message_id}" \
-      --data-urlencode text@- <<<"$1"
+      -d disable_web_page_preview=true \
+      --data-urlencode "text=$1"
   else
     curl -sS -X POST "$(api_url editMessageText)" \
       -d chat_id="${CHAT_ID}" \
       -d message_id="${message_id}" \
-      --data-urlencode text@- <<<"$1"
+      -d disable_web_page_preview=true \
+      --data-urlencode "text=$1"
   fi
 }
 
