@@ -48,7 +48,7 @@ fi
 
 # ========== INSTALL FAIL2BAN (dan curl untuk Telegram) ==========
 echo "[📦] Menginstal Fail2Ban..."
-sudo apt update && sudo apt install -y fail2ban curl
+sudo apt update && sudo apt install -y fail2ban curl jq
 # ========== PASANG HELPER TELEGRAM (tg_notify) ==========
 if [ "$TELEGRAM_ENABLED" = true ]; then
     echo "[🧰] Menginstal helper Telegram: /usr/local/bin/tg_notify"
@@ -141,8 +141,13 @@ edit_message() {
 }
 
 extract_message_id() {
-  # Grep and parse numeric message_id from Telegram JSON
-  sed -n 's/.*"message_id"[[:space:]]*:[[:space:]]*\([0-9]\+\).*/\1/p' | head -n1
+  # Prefer jq for robust parsing
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.result.message_id // empty' 2>/dev/null | head -n1
+  else
+    # Fallback to sed if jq missing
+    sed -n 's/.*"message_id"[[:space:]]*:[[:space:]]*\([0-9]\+\).*/\1/p' | head -n1
+  fi
 }
 
 now_ts() { date +%s; }
