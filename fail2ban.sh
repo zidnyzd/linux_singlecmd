@@ -164,30 +164,48 @@ case "${MODE}" in
   append)
     # Initialize or rotate
     rotate_if_needed
-    if [ ! -s "${ID_FILE}" ]; then
+
+    # Check if we have existing message to append to
+    message_id=""
+    if [ -s "${ID_FILE}" ]; then
+      message_id=$(cat "${ID_FILE}" 2>/dev/null || true)
+    fi
+
+    if [ -z "${message_id}" ]; then
+      # No existing message, create new one
+      echo "[tg_notify] Membuat pesan baru untuk key: ${KEY}" >&2
       echo "${TEXT}" >"${MSG_FILE}"
       RESP=$(send_message "${TEXT}") || true
-      echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+      extracted_id=$(echo -n "${RESP}" | extract_message_id || true)
+      if [ -n "${extracted_id}" ]; then
+        echo "${extracted_id}" >"${ID_FILE}"
+        echo "[tg_notify] Message ID tersimpan: ${extracted_id}" >&2
+      else
+        echo "[tg_notify] Gagal extract message_id dari response: ${RESP}" >&2
+      fi
       date +%s >"${TS_FILE}"
       exit 0
     fi
 
-    # Append and edit existing message
+    # Append to existing message and edit
+    echo "[tg_notify] Mengedit pesan ID: ${message_id} untuk key: ${KEY}" >&2
     { echo "${TEXT}"; echo; } >>"${MSG_FILE}"
-    message_id=$(cat "${ID_FILE}" 2>/dev/null || true)
-    if [ -n "${message_id}" ]; then
-      RESP=$(edit_message "${message_id}" "$(cat "${MSG_FILE}")") || true
-      # If edit fails (no ok), fallback to new message
-      if ! grep -q '"ok"[[:space:]]*:[[:space:]]*true' <<<"${RESP}"; then
-        echo "${TEXT}" >"${MSG_FILE}"
-        RESP=$(send_message "${TEXT}") || true
-        echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
-      fi
+    RESP=$(edit_message "${message_id}" "$(cat "${MSG_FILE}")") || true
+
+    # Check if edit was successful
+    if grep -q '"ok"[[:space:]]*:[[:space:]]*true' <<<"${RESP}"; then
+      echo "[tg_notify] Berhasil edit pesan" >&2
       date +%s >"${TS_FILE}"
     else
+      echo "[tg_notify] Edit gagal, membuat pesan baru: ${RESP}" >&2
+      # Edit failed, fallback to new message
       echo "${TEXT}" >"${MSG_FILE}"
       RESP=$(send_message "${TEXT}") || true
-      echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+      extracted_id=$(echo -n "${RESP}" | extract_message_id || true)
+      if [ -n "${extracted_id}" ]; then
+        echo "${extracted_id}" >"${ID_FILE}"
+        echo "[tg_notify] Fallback: Message ID tersimpan: ${extracted_id}" >&2
+      fi
       date +%s >"${TS_FILE}"
     fi
     ;;
