@@ -271,7 +271,7 @@ fi
 ASN_CODE=${ASN_CODE:--}
 ISP_NAME=${ISP_NAME:--}
 
-printf "%s IP %s %s (jail: %s).\nIP: %s\nASN: %s\nISP: %s" "${ICON}" "${IP}" "${ACTION}" "${JAIL}" "${IP}" "${ASN_CODE}" "${ISP_NAME}"
+printf "%s IP %s (jail: %s).\nIP: %s\nASN: %s\nISP: %s" "${ICON}" "${ACTION}" "${JAIL}" "${IP}" "${ASN_CODE}" "${ISP_NAME}"
 EOF
     sudo chmod +x /usr/local/bin/f2b_build_message
 fi
