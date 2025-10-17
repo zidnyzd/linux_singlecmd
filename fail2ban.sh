@@ -30,11 +30,14 @@ else
         read -r bot_token
         echo -n "[👤] Masukkan Telegram Chat ID: "
         read -r telegram_id
+        echo -n "[🧵] Masukkan Telegram Thread ID (opsional, tekan Enter jika tidak ada): "
+        read -r telegram_thread_id
 
         echo "[💾] Menyimpan kredensial ke /root/.vars..."
         cat <<EOF > /root/.vars
 bot_token="$bot_token"
 telegram_id="$telegram_id"
+telegram_thread_id="${telegram_thread_id}"
 EOF
         chmod 600 /root/.vars
     else
@@ -46,6 +49,144 @@ fi
 # ========== INSTALL FAIL2BAN (dan curl untuk Telegram) ==========
 echo "[📦] Menginstal Fail2Ban..."
 sudo apt update && sudo apt install -y fail2ban curl
+# ========== PASANG HELPER TELEGRAM (tg_notify) ==========
+if [ "$TELEGRAM_ENABLED" = true ]; then
+    echo "[🧰] Menginstal helper Telegram: /usr/local/bin/tg_notify"
+    sudo tee /usr/local/bin/tg_notify >/dev/null <<'EOF'
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# tg_notify <mode> <message> [key]
+#   mode: send|append
+#   message: text to send/append
+#   key: logical group key for batching (default: default)
+
+# Load credentials
+if [ -f /root/.vars ]; then
+    # shellcheck disable=SC1091
+    . /root/.vars
+else
+    echo "[tg_notify] /root/.vars tidak ditemukan" >&2
+    exit 1
+fi
+
+BOT_TOKEN=${bot_token:-}
+CHAT_ID=${telegram_id:-}
+THREAD_ID=${telegram_thread_id:-}
+
+if [ -z "${BOT_TOKEN}" ] || [ -z "${CHAT_ID}" ]; then
+    echo "[tg_notify] BOT_TOKEN atau CHAT_ID kosong" >&2
+    exit 1
+fi
+
+MODE=${1:-send}
+TEXT=${2:-}
+KEY=${3:-default}
+
+if [ -z "${TEXT}" ]; then
+    echo "[tg_notify] TEXT kosong" >&2
+    exit 1
+fi
+
+STATE_DIR=/var/tmp
+MSG_FILE="${STATE_DIR}/tg_notify_${KEY}.txt"
+ID_FILE="${STATE_DIR}/tg_notify_${KEY}.msgid"
+TS_FILE="${STATE_DIR}/tg_notify_${KEY}.ts"
+
+mkdir -p "${STATE_DIR}"
+
+api_url() {
+  echo "https://api.telegram.org/bot${BOT_TOKEN}/$1"
+}
+
+send_message() {
+  if [ -n "${THREAD_ID}" ]; then
+    curl -sS -X POST "$(api_url sendMessage)" \
+      -d chat_id="${CHAT_ID}" \
+      -d message_thread_id="${THREAD_ID}" \
+      --data-urlencode text@- <<<"$1"
+  else
+    curl -sS -X POST "$(api_url sendMessage)" \
+      -d chat_id="${CHAT_ID}" \
+      --data-urlencode text@- <<<"$1"
+  fi
+}
+
+edit_message() {
+  local message_id="$1"; shift
+  if [ -n "${THREAD_ID}" ]; then
+    curl -sS -X POST "$(api_url editMessageText)" \
+      -d chat_id="${CHAT_ID}" \
+      -d message_id="${message_id}" \
+      --data-urlencode text@- <<<"$1"
+  else
+    curl -sS -X POST "$(api_url editMessageText)" \
+      -d chat_id="${CHAT_ID}" \
+      -d message_id="${message_id}" \
+      --data-urlencode text@- <<<"$1"
+  fi
+}
+
+extract_message_id() {
+  # Grep and parse numeric message_id from Telegram JSON
+  sed -n 's/.*"message_id"[[:space:]]*:[[:space:]]*\([0-9]\+\).*/\1/p' | head -n1
+}
+
+now_ts() { date +%s; }
+
+rotate_if_needed() {
+  local text_len
+  text_len=$(wc -c <"${MSG_FILE}" 2>/dev/null || echo 0)
+  # Telegram limit ~4096 chars; rotate if > 3900 to be safe
+  if [ "${text_len}" -gt 3900 ]; then
+    rm -f "${ID_FILE}" "${TS_FILE}" "${MSG_FILE}"
+  fi
+}
+
+case "${MODE}" in
+  send)
+    RESP=$(send_message "${TEXT}") || true
+    echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+    ;;
+  append)
+    # Initialize or rotate
+    rotate_if_needed
+    if [ ! -s "${ID_FILE}" ]; then
+      echo "${TEXT}" >"${MSG_FILE}"
+      RESP=$(send_message "${TEXT}") || true
+      echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+      date +%s >"${TS_FILE}"
+      exit 0
+    fi
+
+    # Append and edit existing message
+    { echo "${TEXT}"; echo; } >>"${MSG_FILE}"
+    message_id=$(cat "${ID_FILE}" 2>/dev/null || true)
+    if [ -n "${message_id}" ]; then
+      RESP=$(edit_message "${message_id}" "$(cat "${MSG_FILE}")") || true
+      # If edit fails (no ok), fallback to new message
+      if ! grep -q '"ok"[[:space:]]*:[[:space:]]*true' <<<"${RESP}"; then
+        echo "${TEXT}" >"${MSG_FILE}"
+        RESP=$(send_message "${TEXT}") || true
+        echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+      fi
+      date +%s >"${TS_FILE}"
+    else
+      echo "${TEXT}" >"${MSG_FILE}"
+      RESP=$(send_message "${TEXT}") || true
+      echo -n "${RESP}" | extract_message_id >"${ID_FILE}" || true
+      date +%s >"${TS_FILE}"
+    fi
+    ;;
+  *)
+    echo "[tg_notify] MODE tidak dikenali: ${MODE}" >&2
+    exit 1
+    ;;
+esac
+EOF
+    sudo chmod +x /usr/local/bin/tg_notify
+fi
 
 # Pastikan direktori ada
 sudo mkdir -p /etc/fail2ban/action.d
@@ -68,8 +209,8 @@ if [ "$TELEGRAM_ENABLED" = true ]; then
 actionstart =
 actionstop  =
 actioncheck =
-actionban   = . /root/.vars && curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" -d chat_id="${telegram_id}" -d text="🚫 IP <ip> telah diblokir oleh Fail2Ban (jail: <name>)."
-actionunban = . /root/.vars && curl -s -X POST "https://api.telegram.org/bot${bot_token}/sendMessage" -d chat_id="${telegram_id}" -d text="✅ IP <ip> telah di-unban oleh Fail2Ban (jail: <name>)."
+actionban   = /usr/local/bin/tg_notify append "🚫 IP <ip> diblokir (jail: <name>)." fail2ban-sshd
+actionunban = /usr/local/bin/tg_notify append "✅ IP <ip> di-unban (jail: <name>)." fail2ban-sshd
 [Init]
 EOF
 fi
