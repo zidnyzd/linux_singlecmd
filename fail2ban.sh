@@ -94,6 +94,7 @@ MSG_FILE="${STATE_DIR}/tg_notify_${KEY}.txt"
 ID_FILE="${STATE_DIR}/tg_notify_${KEY}.msgid"
 TS_FILE="${STATE_DIR}/tg_notify_${KEY}.ts"
 LOCK_FILE="${STATE_DIR}/tg_notify_${KEY}.lock"
+COUNT_FILE="${STATE_DIR}/tg_notify_${KEY}.count"
 
 mkdir -p "${STATE_DIR}"
 
@@ -155,8 +156,12 @@ now_ts() { date +%s; }
 readable_now() { date '+%Y-%m-%d %H:%M:%S %Z'; }
 
 ban_count_from_file() {
-  # Count lines that start with ban icon
-  grep -c '^🚫' 2>/dev/null || true
+  # Read persistent total ban count
+  if [ -s "${COUNT_FILE}" ]; then
+    cat "${COUNT_FILE}"
+  else
+    echo 0
+  fi
 }
 
 strip_footer() {
@@ -169,6 +174,7 @@ rotate_if_needed() {
   text_len=$(wc -c <"${MSG_FILE}" 2>/dev/null || echo 0)
   # Telegram limit ~4096 chars; rotate if > 3900 to be safe
   if [ "${text_len}" -gt 3900 ]; then
+    # Preserve persistent counters; only reset message state
     rm -f "${ID_FILE}" "${TS_FILE}" "${MSG_FILE}"
   fi
 }
@@ -209,7 +215,13 @@ case "${MODE}" in
     { echo "${TEXT}"; echo; } >>"${MSG_FILE}"
     # Build body without old footer
     BODY=$(strip_footer <"${MSG_FILE}")
-    TOTAL=$(grep -c '^🚫' "${MSG_FILE}" 2>/dev/null || echo 0)
+    # Persistent total bans
+    if [ ! -s "${COUNT_FILE}" ]; then echo 0 >"${COUNT_FILE}"; fi
+    if grep -q '^🚫' <<<"${TEXT}"; then
+      CUR=$(cat "${COUNT_FILE}" 2>/dev/null || echo 0)
+      echo $((CUR+1)) >"${COUNT_FILE}"
+    fi
+    TOTAL=$(ban_count_from_file)
     FOOTER=$'Terakhir diperbarui: '"$(readable_now)"$'\nTotal IP diblokir: '"${TOTAL}"
     RESP=$(edit_message "${message_id}" "${BODY}
 
