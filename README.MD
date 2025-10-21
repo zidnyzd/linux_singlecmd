@@ -9,7 +9,7 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
 1. **Fail2Ban Installation**  
    Blokir serangan brute force SSH  
    ```bash
-   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+   rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
    ```
 
 2. **Kernel Management Tool**  
@@ -69,7 +69,7 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
 ### 🔒 Security & Protection
 - **Fail2Ban Installation** - Blokir serangan brute force SSH
   ```bash
-  wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+  rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
   ```
 
 - **Root Access Management**
