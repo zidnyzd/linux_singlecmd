@@ -32,7 +32,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
   Top Up Instant 24/7<br>
   <br>
   Paket XL yang Tersedia di Web :<br>
-  XL HYFE, XL BIZ Lite, BIZ Starter, BIZ E-Commerce, Xtra Combo VIP Double YouTube, XL Circle, Akrab, Akrab Bekasan, Masa Aktif 1 Tahun, dan banyak lagi<br>
+  XL BIZ Lite, XL BIZ Starter, XL BIZ E-Commerce, Xtra Combo VIP Double YouTube, XL Circle, Akrab, Akrab Bekasan, Masa Aktif 1 Tahun, dan banyak lagi<br>
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
