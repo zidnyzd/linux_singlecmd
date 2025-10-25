@@ -57,7 +57,7 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
 9. **SSH Banner Update**  
    Update banner SSH  
    ```bash
-   wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
+   rm -f banner.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
    ```
 
 ## 📋 Overview
