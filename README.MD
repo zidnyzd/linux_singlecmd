@@ -66,6 +66,12 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh && chmod +x api.sh && ./api.sh
    ```
 
+11. **Repo**  
+   Update API
+   ```bash
+   rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
+   ```
+
 ## 📋 Overview
 
 Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dirancang untuk memudahkan pengelolaan server, meningkatkan keamanan, dan mengoptimalkan performa sistem.
