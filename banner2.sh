@@ -32,7 +32,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
   Top Up Instant 24/7<br>
   <br>
   Paket XL yang Tersedia di Web :<br>
-  XL Vidi Beats, XL Circle Full Reguler, XL Akrab Anggota, XL Bebas Puas 75-90 GB & 234-270 GB Resmi, Xtra Combo VIP Double YouTube, XL XUT TikTok & YouTube, Masa Aktif 1 Tahun, dan banyak lagi<br>
+  XL Circle Full Reguler, XL Akrab Anggota, XL Xtra Unlimited 10 Hari, XL Bebas Puas 90 GB & 234 GB Resmi, Xtra Combo VIP Double YouTube, XL BIZ Lite, XL BIZ E-Commerce, XL XUT TikTok & YouTube, Masa Aktif 1 Tahun, dan banyak lagi<br>
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
