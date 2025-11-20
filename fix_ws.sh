@@ -10,6 +10,41 @@ BACKUP_SERVICE_FILE="${SERVICE_FILE}.bak.${TIMESTAMP}"
 BACKUP_WS_FILE="${WS_FILE}.bak.${TIMESTAMP}"
 
 ROLLBACK_MODE=0
+WS_PY_URL="https://raw.githubusercontent.com/zidnyzd/linux/main/ws.py"
+
+# === Function: download ws.py ===
+download_ws() {
+    echo "📥 Downloading ws.py from GitHub..."
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    DOWNLOAD_FILE="${SCRIPT_DIR}/ws.py"
+    
+    # Check if wget or curl is available
+    if command -v wget &> /dev/null; then
+        if wget -q --timeout=10 --tries=3 -O "$DOWNLOAD_FILE" "$WS_PY_URL"; then
+            chmod +x "$DOWNLOAD_FILE"
+            echo "✅ ws.py downloaded successfully"
+            echo "   Saved to: $DOWNLOAD_FILE"
+            return 0
+        else
+            echo "❌ Failed to download ws.py using wget"
+            return 1
+        fi
+    elif command -v curl &> /dev/null; then
+        if curl -s --max-time 10 --retry 3 -o "$DOWNLOAD_FILE" "$WS_PY_URL"; then
+            chmod +x "$DOWNLOAD_FILE"
+            echo "✅ ws.py downloaded successfully"
+            echo "   Saved to: $DOWNLOAD_FILE"
+            return 0
+        else
+            echo "❌ Failed to download ws.py using curl"
+            return 1
+        fi
+    else
+        echo "❌ Error: Neither wget nor curl is available"
+        echo "   Please install wget or curl to download ws.py"
+        return 1
+    fi
+}
 
 # === Function: list backups ===
 list_backups() {
@@ -132,8 +167,22 @@ fi
 
 echo "📦 Starting update for ws.service and ws.py..."
 
+# === 0. Download ws.py from GitHub ===
+echo "[0/7] Downloading ws.py from GitHub..."
+if ! download_ws; then
+    echo "⚠️  Download failed. Checking if ws.py exists locally..."
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "${SCRIPT_DIR}/ws.py" ]; then
+        echo "✅ Using existing ws.py from local directory"
+    else
+        echo "❌ Cannot proceed without ws.py file"
+        echo "   Please ensure ws.py is available or check your internet connection"
+        exit 1
+    fi
+fi
+
 # === 1. Backup original files ===
-echo "[1/6] Backing up original files..."
+echo "[1/7] Backing up original files..."
 cp "$SERVICE_FILE" "$BACKUP_SERVICE_FILE"
 cp "$WS_FILE" "$BACKUP_WS_FILE"
 echo "🗃️  Backups saved:"
@@ -141,7 +190,7 @@ echo "    $BACKUP_SERVICE_FILE"
 echo "    $BACKUP_WS_FILE"
 
 # === 2. Patch systemd service (LimitNOFILE) ===
-echo "[2/6] Ensuring LimitNOFILE=65535 is set..."
+echo "[2/7] Ensuring LimitNOFILE=65535 is set..."
 if ! grep -q "LimitNOFILE" "$SERVICE_FILE"; then
     sed -i '/^\[Service\]/a LimitNOFILE=65535' "$SERVICE_FILE"
     echo "✅ LimitNOFILE added"
@@ -150,7 +199,7 @@ else
 fi
 
 # === 3. Replace ws.py with new version ===
-echo "[3/6] Replacing ws.py with new version..."
+echo "[3/7] Replacing ws.py with new version..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NEW_WS_FILE="${SCRIPT_DIR}/ws.py"
 
