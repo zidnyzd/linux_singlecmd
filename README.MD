@@ -39,7 +39,7 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
 6. **WebSocket Fix**  
    Perbaikan layanan WebSocket & Auto Restart  
    ```bash
-   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
+   rm -f fix_ws.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
    ```
 
 7. **Install Dropbear 2018**  
@@ -69,7 +69,7 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
 11. **Repo**  
    Update API
    ```bash
-   rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
+   rm -f repo.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
    ```
 
 ## 📋 Overview
