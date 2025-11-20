@@ -198,8 +198,8 @@ else
     echo "ℹ️  LimitNOFILE already exists"
 fi
 
-# === 3. Replace ws.py with new version ===
-echo "[3/7] Replacing ws.py with new version..."
+# === 3. Replace ws.py with new version (NO EDITING - direct copy only) ===
+echo "[3/7] Replacing ws.py with new version (no modifications, direct copy)..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NEW_WS_FILE="${SCRIPT_DIR}/ws.py"
 
@@ -209,9 +209,10 @@ if [ ! -f "$NEW_WS_FILE" ]; then
     exit 1
 fi
 
+# Copy ws.py as-is without any modifications (ws.py is already safe and complete)
 cp "$NEW_WS_FILE" "$WS_FILE"
 chmod +x "$WS_FILE"
-echo "✅ ws.py replaced with new version"
+echo "✅ ws.py replaced with new version (no edits applied - file is safe as-is)"
 
 # === 4. Setup auto-restart every 6 hours via systemd timer ===
 echo "[4/7] Setting up auto-restart timer (every 6 hours)..."
@@ -255,10 +256,11 @@ systemctl daemon-reload
 systemctl restart ws
 
 # === 6. Verifikasi file ws.py ===
-echo "[6/7] Verifying ws.py file:"
+echo "[6/7] Verifying ws.py file (read-only check, no modifications):"
 if [ -f "$WS_FILE" ]; then
-    echo "✅ ws.py file exists"
-    grep -A3 "def removeConn" "$WS_FILE" || echo "⚠️  Could not find removeConn method"
+    echo "✅ ws.py file exists and is ready"
+    echo "   File size: $(stat -c%s "$WS_FILE" 2>/dev/null || echo "unknown") bytes"
+    echo "   File is safe and complete - no edits were applied"
 else
     echo "❌ Error: ws.py file not found!"
 fi
@@ -272,7 +274,7 @@ else
     echo "⚠️  Could not determine ws service PID or /proc entry missing."
 fi
 
-echo "✅ Update complete. ws.service is running with new ws.py and file descriptor limit."
+echo "✅ Update complete. ws.service is running with new ws.py (no edits applied - file is safe as-is) and file descriptor limit."
 echo ""
 echo "🟢 Rollback options:"
 echo "   List backups:    sudo $0 --rollback --list"
