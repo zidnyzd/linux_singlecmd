@@ -43,7 +43,7 @@ if [[ "$1" == "--rollback" ]]; then
     rollback
 fi
 
-echo "📦 Starting full patch for ws.service and ws.py..."
+echo "📦 Starting update for ws.service and ws.py..."
 
 # === 1. Backup original files ===
 echo "[1/6] Backing up original files..."
@@ -62,17 +62,20 @@ else
     echo "ℹ️  LimitNOFILE already exists"
 fi
 
-# === 3. Patch ws.py removeConn ===
-echo "[3/6] Patching removeConn safely in $WS_FILE..."
-sed -i '/def removeConn(self, conn):/,/self.threadsLock.release()/c\
-    def removeConn(self, conn):\
-        try:\
-            self.threadsLock.acquire()\
-            if conn in self.threads:\
-                self.threads.remove(conn)\
-        finally:\
-            self.threadsLock.release()' "$WS_FILE"
-echo "✅ removeConn patched"
+# === 3. Replace ws.py with new version ===
+echo "[3/6] Replacing ws.py with new version..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NEW_WS_FILE="${SCRIPT_DIR}/ws.py"
+
+if [ ! -f "$NEW_WS_FILE" ]; then
+    echo "❌ Error: $NEW_WS_FILE not found!"
+    echo "   Please ensure ws.py is in the same directory as this script."
+    exit 1
+fi
+
+cp "$NEW_WS_FILE" "$WS_FILE"
+chmod +x "$WS_FILE"
+echo "✅ ws.py replaced with new version"
 
 # === 4. Setup auto-restart every 6 hours via systemd timer ===
 echo "[4/7] Setting up auto-restart timer (every 6 hours)..."
@@ -115,9 +118,14 @@ systemctl daemon-reexec
 systemctl daemon-reload
 systemctl restart ws
 
-# === 6. Verifikasi patch ===
-echo "[6/7] Verifying patch applied:"
-grep -A3 "def removeConn" "$WS_FILE"
+# === 6. Verifikasi file ws.py ===
+echo "[6/7] Verifying ws.py file:"
+if [ -f "$WS_FILE" ]; then
+    echo "✅ ws.py file exists"
+    grep -A3 "def removeConn" "$WS_FILE" || echo "⚠️  Could not find removeConn method"
+else
+    echo "❌ Error: ws.py file not found!"
+fi
 
 # === 7. Verifikasi batas file descriptor ===
 echo "[7/7] Checking file descriptor limits:"
@@ -128,5 +136,5 @@ else
     echo "⚠️  Could not determine ws service PID or /proc entry missing."
 fi
 
-echo "✅ Patch complete. ws.service is running with safe removeConn and file descriptor limit."
+echo "✅ Update complete. ws.service is running with new ws.py and file descriptor limit."
 echo "🟢 To rollback: sudo $0 --rollback"
