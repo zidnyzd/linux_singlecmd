@@ -253,7 +253,8 @@ restore_from_telegram() {
   fi
 
   # find last document from the configured chat_id
-  file_id=$(echo "$updates" | jq -r --arg cid "$TG_CHATID" '[ .result[] | select(.message!=null) | .message | select(.chat.id|tostring==$cid) | select(.document!=null) | {date:.date, file_id:.document.file_id} ] | sort_by(.date) | last | .file_id')
+  local jq_file_filter="[ .result[] | select(.message!=null) | .message | select(.chat.id|tostring==\$cid) | select(.document!=null) | {date:.date, file_id:.document.file_id} ] | sort_by(.date) | last | .file_id"
+  file_id=$(echo "$updates" | jq -r --arg cid "$TG_CHATID" "$jq_file_filter")
   if [ -z "$file_id" ] || [ "$file_id" = "null" ]; then
     echo -e "${c_yellow}Tidak ada file document terbaru di bot untuk chat_id $TG_CHATID.${c_reset}"
     return 1
@@ -360,11 +361,15 @@ info_user_cli() {
 expire_user_cli() {
   local user="$1"
   if [ -z "$user" ]; then echo "usage: expire username"; exit 1; fi
-  if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
+  local jq_check=".[] | select(.username==\$u)"
+  local jq_result
+  jq_result=$(jq -e --arg u "$user" "$jq_check" "$USERS_FILE" 2>/dev/null)
+  if [ $? -ne 0 ] || [ -z "$jq_result" ]; then
     echo -e "${c_yellow}User $user not found${c_reset}"; exit 1
   fi
   local today=$(date -u +"%Y-%m-%d")
-  jq --arg u "$user" --arg ex "$today" '(.[] | select(.username==$u)).expires = $ex' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
+  local jq_filter="map(if .username == \$u then .expires = \$ex else . end)"
+  jq --arg u "$user" --arg ex "$today" "$jq_filter" "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
   echo -e "${c_green}User $user marked expired - $today${c_reset}"
   regen_config >/dev/null 2>&1 || true
   systemctl restart zivpn.service || true
@@ -373,7 +378,8 @@ expire_user_cli() {
 regen_config() {
   ensure_jq
   local today=$(date -u +"%Y-%m-%d")
-  arr=$(jq -c --arg today "$today" '[ .[] | select(.expires >= $today) | .username ]' "$USERS_FILE")
+  local jq_filter="[ .[] | select(.expires >= \$today) | .username ]"
+  arr=$(jq -c --arg today "$today" "$jq_filter" "$USERS_FILE")
   if [ -z "$arr" ] || [ "$arr" = "[]" ]; then arr='["zi"]'; fi
   jq --argjson arr "$arr" '.config = $arr' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
   local cnt=$(echo "$arr" | jq 'length')
