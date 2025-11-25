@@ -15,8 +15,22 @@ c_cyan=$(tput setaf 6 2>/dev/null || echo "")
 
 ensure_jq() {
   if ! command -v jq >/dev/null 2>&1; then
-    echo -e "${c_red}Error: jq not installed. Please install jq.${c_reset}"
-    exit 1
+    echo -e "${c_yellow}jq tidak ditemukan. Menginstall jq...${c_reset}"
+    if command -v apt-get >/dev/null 2>&1; then
+      apt-get update -qq && apt-get install -y jq >/dev/null 2>&1
+    elif command -v yum >/dev/null 2>&1; then
+      yum install -y jq >/dev/null 2>&1
+    elif command -v dnf >/dev/null 2>&1; then
+      dnf install -y jq >/dev/null 2>&1
+    else
+      echo -e "${c_red}Error: jq tidak terinstall dan tidak dapat menginstall otomatis. Silakan install jq manual.${c_reset}"
+      exit 1
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+      echo -e "${c_red}Error: Gagal menginstall jq. Silakan install manual.${c_reset}"
+      exit 1
+    fi
+    echo -e "${c_green}jq berhasil diinstall.${c_reset}"
   fi
 }
 
@@ -36,6 +50,135 @@ load_telegram_conf() {
     TG_TOKEN="${ZIVPN_TG_TOKEN:-$TG_TOKEN}"
     TG_CHATID="${ZIVPN_TG_CHATID:-$TG_CHATID}"
   fi
+}
+
+# --- Initial Setup Function ---
+initial_setup() {
+  echo ""
+  echo -e "${c_cyan}${c_bold}========================================${c_reset}"
+  echo -e "${c_cyan}${c_bold}   ZIVPN SETUP AWAL - ONE TIME INSTALL  ${c_reset}"
+  echo -e "${c_cyan}${c_bold}========================================${c_reset}"
+  echo ""
+  
+  # Check if already setup
+  if [ -f "$USERS_FILE" ] && [ -f "$CONFIG_FILE" ] && [ -f "$TELEGRAM_CONF" ]; then
+    echo -e "${c_green}Setup sudah dilakukan sebelumnya.${c_reset}"
+    echo -e "${c_yellow}Jika ingin setup ulang, hapus file berikut:${c_reset}"
+    echo -e "  - $USERS_FILE"
+    echo -e "  - $CONFIG_FILE"
+    echo -e "  - $TELEGRAM_CONF"
+    echo ""
+    read -p "Lanjutkan ke menu? (Y/n): " cont
+    if [[ "$cont" =~ ^[Nn]$ ]]; then
+      exit 0
+    fi
+    return 0
+  fi
+  
+  # Ensure jq is installed
+  ensure_jq
+  
+  # Create /etc/zivpn directory
+  echo -e "${c_cyan}[1/5] Membuat direktori /etc/zivpn...${c_reset}"
+  mkdir -p /etc/zivpn
+  mkdir -p "$BACKUP_DIR"
+  chown root:root /etc/zivpn "$BACKUP_DIR"
+  chmod 700 /etc/zivpn "$BACKUP_DIR"
+  echo -e "${c_green}Direktori dibuat.${c_reset}"
+  
+  # Initialize users.json if not exists
+  echo -e "${c_cyan}[2/5] Menginisialisasi users.json...${c_reset}"
+  if [ ! -f "$USERS_FILE" ]; then
+    echo "[]" > "$USERS_FILE"
+    chmod 600 "$USERS_FILE"
+    chown root:root "$USERS_FILE"
+    echo -e "${c_green}users.json dibuat.${c_reset}"
+  else
+    echo -e "${c_yellow}users.json sudah ada, dilewati.${c_reset}"
+  fi
+  
+  # Initialize config.json if not exists
+  echo -e "${c_cyan}[3/5] Menginisialisasi config.json...${c_reset}"
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo '{"config":["zi"]}' > "$CONFIG_FILE"
+    chmod 600 "$CONFIG_FILE"
+    chown root:root "$CONFIG_FILE"
+    echo -e "${c_green}config.json dibuat.${c_reset}"
+  else
+    echo -e "${c_yellow}config.json sudah ada, dilewati.${c_reset}"
+  fi
+  
+  # Setup Telegram Bot
+  echo -e "${c_cyan}[4/5] Setup Telegram Bot...${c_reset}"
+  if [ -f "$TELEGRAM_CONF" ]; then
+    echo -e "${c_yellow}Telegram config sudah ada.${c_reset}"
+    read -p "Setup ulang Telegram? (y/N): " redo_tg
+    if [[ ! "$redo_tg" =~ ^[Yy]$ ]]; then
+      echo -e "${c_yellow}Telegram setup dilewati.${c_reset}"
+      return 0
+    fi
+  fi
+  
+  echo ""
+  echo -e "${c_cyan}Untuk mendapatkan Bot Token:${c_reset}"
+  echo -e "  1. Buka Telegram, cari @BotFather"
+  echo -e "  2. Kirim perintah /newbot"
+  echo -e "  3. Ikuti instruksi untuk membuat bot baru"
+  echo -e "  4. Salin token yang diberikan BotFather"
+  echo ""
+  read -p "Masukkan Bot Token: " tg_token
+  
+  if [ -z "$tg_token" ]; then
+    echo -e "${c_yellow}Token kosong, Telegram setup dilewati.${c_reset}"
+    return 0
+  fi
+  
+  echo ""
+  echo -e "${c_cyan}Untuk mendapatkan Chat ID:${c_reset}"
+  echo -e "  1. Kirim pesan ke bot yang baru dibuat"
+  echo -e "  2. Buka browser: https://api.telegram.org/bot${tg_token}/getUpdates"
+  echo -e "  3. Cari \"chat\":{\"id\":123456789 di hasil JSON"
+  echo -e "  4. Salin angka ID tersebut"
+  echo ""
+  read -p "Masukkan Chat ID: " tg_chatid
+  
+  if [ -z "$tg_chatid" ]; then
+    echo -e "${c_yellow}Chat ID kosong, Telegram setup dilewati.${c_reset}"
+    return 0
+  fi
+  
+  # Test Telegram connection
+  echo -e "${c_cyan}Menguji koneksi Telegram...${c_reset}"
+  ensure_jq
+  test_resp=$(curl -s "https://api.telegram.org/bot${tg_token}/getMe")
+  test_ok=$(echo "$test_resp" | jq -r '.ok' 2>/dev/null)
+  
+  if [ "$test_ok" = "true" ]; then
+    bot_name=$(echo "$test_resp" | jq -r '.result.username' 2>/dev/null)
+    echo -e "${c_green}Koneksi berhasil! Bot: @${bot_name}${c_reset}"
+  else
+    echo -e "${c_red}Gagal menguji koneksi. Token mungkin salah.${c_reset}"
+    read -p "Tetap simpan konfigurasi? (y/N): " save_anyway
+    if [[ ! "$save_anyway" =~ ^[Yy]$ ]]; then
+      echo -e "${c_yellow}Konfigurasi Telegram dibatalkan.${c_reset}"
+      return 0
+    fi
+  fi
+  
+  # Save Telegram config
+  echo -e "${c_cyan}[5/5] Menyimpan konfigurasi Telegram...${c_reset}"
+  cat > "$TELEGRAM_CONF" <<EOF
+ZIVPN_TG_TOKEN=${tg_token}
+ZIVPN_TG_CHATID=${tg_chatid}
+EOF
+  chmod 600 "$TELEGRAM_CONF"
+  chown root:root "$TELEGRAM_CONF"
+  echo -e "${c_green}Konfigurasi Telegram disimpan di $TELEGRAM_CONF${c_reset}"
+  
+  echo ""
+  echo -e "${c_green}${c_bold}Setup selesai!${c_reset}"
+  echo ""
+  read -p "Tekan enter untuk melanjutkan ke menu..."
 }
 
 # --- Backup / restore functions ---
@@ -59,7 +202,7 @@ send_file_to_telegram() {
   load_telegram_conf
   ensure_jq
   if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHATID" ]; then
-    echo -e "${c_red}Telegram token/chat id belum diset. Buat file $TELEGRAM_CONF dengan ZIVPN_TG_TOKEN=... dan ZIVPN_TG_CHATID=... atau set env vars.${c_reset}"
+    echo -e "${c_red}Telegram token/chat id belum diset. Jalankan setup awal atau buat file $TELEGRAM_CONF dengan ZIVPN_TG_TOKEN=... dan ZIVPN_TG_CHATID=...${c_reset}"
     return 1
   fi
   if [ ! -f "$file" ]; then
@@ -97,7 +240,7 @@ restore_from_telegram() {
   load_telegram_conf
   ensure_jq
   if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHATID" ]; then
-    echo -e "${c_red}Telegram token/chat id belum diset. Buat file $TELEGRAM_CONF dengan ZIVPN_TG_TOKEN=... dan ZIVPN_TG_CHATID=... atau set env vars.${c_reset}"
+    echo -e "${c_red}Telegram token/chat id belum diset. Jalankan setup awal atau buat file $TELEGRAM_CONF dengan ZIVPN_TG_TOKEN=... dan ZIVPN_TG_CHATID=...${c_reset}"
     return 1
   fi
 
@@ -149,7 +292,7 @@ restore_from_telegram() {
   tar -xzf "$out_local" -C "$tmpdir"
   # expect tmpdir/etc/zivpn/...
   if [ -d "$tmpdir/etc/zivpn" ]; then
-    echo -e "${c_cyan}Memindahkan file dari backup ke /etc/zivpn (overwrite)${c_reset}"
+    echo -e "${c_cyan}Memindahkan file dari backup ke /etc/zivpn - overwrite${c_reset}"
     cp -a "$tmpdir/etc/zivpn/." /etc/zivpn/
     chown root:root /etc/zivpn/users.json /etc/zivpn/config.json 2>/dev/null || true
     chmod 600 /etc/zivpn/users.json 2>/dev/null || true
@@ -159,7 +302,7 @@ restore_from_telegram() {
     rm -rf "$tmpdir"
     return 0
   else
-    echo -e "${c_red}File backup tidak berformat yang diharapkan (tidak ditemukan etc/zivpn/...). Restore dibatalkan.${c_reset}"
+    echo -e "${c_red}File backup tidak berformat yang diharapkan - tidak ditemukan etc/zivpn. Restore dibatalkan.${c_reset}"
     rm -rf "$tmpdir"
     return 1
   fi
@@ -173,7 +316,7 @@ add_user_cli() {
   fi
   local created=$(date -u +"%Y-%m-%d")
   local expires=$(date -u -d "$created +$days days" +"%Y-%m-%d")
-  if jq -e --arg u "$user" '.[] | select(.username==\$u)' "$USERS_FILE" >/dev/null 2>&1; then
+  if jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User $user already exists${c_reset}"; exit 1
   fi
   local password="$user"   # password == username
@@ -188,10 +331,10 @@ add_user_cli() {
 del_user_cli() {
   local user="$1"
   if [ -z "$user" ]; then echo "usage: del <username>"; exit 1; fi
-  if ! jq -e --arg u "$user" '.[] | select(.username==\$u)' "$USERS_FILE" >/dev/null 2>&1; then
+  if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User $user not found${c_reset}"; exit 1
   fi
-  jq --arg u "$user" 'del(.[] | select(.username==\$u))' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
+  jq --arg u "$user" 'del(.[] | select(.username==$u))' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
   echo -e "${c_green}Deleted user $user${c_reset}"
   regen_config >/dev/null 2>&1 || true
   systemctl restart zivpn.service || true
@@ -208,20 +351,20 @@ list_users_cli() {
 info_user_cli() {
   local user="$1"
   if [ -z "$user" ]; then echo "usage: info <username>"; exit 1; fi
-  if ! jq -e --arg u "$user" '.[] | select(.username==\$u)' "$USERS_FILE" >/dev/null 2>&1; then
+  if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User not found${c_reset}"; exit 1
   fi
-  jq -r --arg u "$user" '.[] | select(.username==\$u) | "username: \(.username)\npassword: \(.password)\ncreated: \(.created)\nexpires: \(.expires)"' "$USERS_FILE"
+  jq -r --arg u "$user" '.[] | select(.username==$u) | "username: \(.username)\npassword: \(.password)\ncreated: \(.created)\nexpires: \(.expires)"' "$USERS_FILE"
 }
 
 expire_user_cli() {
   local user="$1"
   if [ -z "$user" ]; then echo "usage: expire <username>"; exit 1; fi
-  if ! jq -e --arg u "$user" '.[] | select(.username==\$u)' "$USERS_FILE" >/dev/null 2>&1; then
+  if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User $user not found${c_reset}"; exit 1
   fi
   local today=$(date -u +"%Y-%m-%d")
-  jq --arg u "$user" --arg ex "$today" '(.[] | select(.username==\$u)).expires = $ex' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
+  jq --arg u "$user" --arg ex "$today" '(.[] | select(.username==$u)).expires = $ex' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
   echo -e "${c_green}User $user marked expired ($today)${c_reset}"
   regen_config >/dev/null 2>&1 || true
   systemctl restart zivpn.service || true
@@ -255,7 +398,8 @@ interactive_menu() {
     echo -e "  ${c_green}7)${c_reset} Backup -> buat file di server"
     echo -e "  ${c_green}8)${c_reset} Backup -> kirim ke Telegram"
     echo -e "  ${c_green}9)${c_reset} Restore <- ambil backup terbaru dari Telegram"
-    echo -e "  ${c_green}10)${c_reset} Exit"
+    echo -e "  ${c_green}10)${c_reset} Setup ulang (Telegram config)"
+    echo -e "  ${c_green}11)${c_reset} Exit"
     echo ""
     read -p $'\e[36mPilih nomor> \e[0m' choice
     case "$choice" in
@@ -308,19 +452,42 @@ interactive_menu() {
         if [[ "$conf" =~ ^[Yy]$ ]]; then restore_from_telegram; else echo "Batal."; fi
         read -p "Tekan enter untuk lanjut..."
         ;;
-      10) echo "Bye."; exit 0 ;;
+      10)
+        initial_setup
+        ;;
+      11) echo "Bye."; exit 0 ;;
       *) echo -e "${c_yellow}Pilihan tidak valid.${c_reset}"; read -p "Tekan enter..." ;;
     esac
   done
 }
 
 # --- Entry point: CLI or interactive ---
+# Run initial setup if needed (only for interactive mode)
 if [ "$#" -eq 0 ]; then
+  # Check if initial setup needed
+  if [ ! -f "$USERS_FILE" ] || [ ! -f "$CONFIG_FILE" ]; then
+    initial_setup
+  fi
   interactive_menu
   exit 0
 fi
 
+# For CLI commands, ensure files exist
+if [ ! -f "$USERS_FILE" ]; then
+  mkdir -p /etc/zivpn
+  echo "[]" > "$USERS_FILE"
+  chmod 600 "$USERS_FILE"
+  chown root:root "$USERS_FILE"
+fi
+if [ ! -f "$CONFIG_FILE" ]; then
+  mkdir -p /etc/zivpn
+  echo '{"config":["zi"]}' > "$CONFIG_FILE"
+  chmod 600 "$CONFIG_FILE"
+  chown root:root "$CONFIG_FILE"
+fi
+
 case "$1" in
+  setup) initial_setup ;;
   add) shift; add_user_cli "$1" "$2" ;;
   del) shift; del_user_cli "$1" ;;
   list) list_users_cli ;;
