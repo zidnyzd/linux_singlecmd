@@ -323,7 +323,7 @@ add_user_cli() {
   jq --arg username "$user" --arg password "$password" --arg created "$created" --arg expires "$expires" \
      '. + [ {username:$username, password:$password, created:$created, expires:$expires} ]' \
      "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
-  echo -e "${c_green}Added user: $user (expires: $expires) | password = username${c_reset}"
+  echo -e "${c_green}Added user: $user - expires: $expires | password = username${c_reset}"
   regen_config >/dev/null 2>&1 || true
   systemctl restart zivpn.service || true
 }
@@ -341,9 +341,9 @@ del_user_cli() {
 }
 
 list_users_cli() {
-  echo -e "${c_bold}Users (username | expiresUTC):${c_reset}"
+  echo -e "${c_bold}Users - username | expiresUTC:${c_reset}"
   if [ "$(jq length "$USERS_FILE")" -eq 0 ]; then
-    echo "(no users)"; return
+    echo "no users"; return
   fi
   jq -r '.[] | "\(.username) | \(.expires)"' "$USERS_FILE" | nl -ba
 }
@@ -365,7 +365,7 @@ expire_user_cli() {
   fi
   local today=$(date -u +"%Y-%m-%d")
   jq --arg u "$user" --arg ex "$today" '(.[] | select(.username==$u)).expires = $ex' "$USERS_FILE" > "$USERS_FILE.tmp" && mv "$USERS_FILE.tmp" "$USERS_FILE"
-  echo -e "${c_green}User $user marked expired ($today)${c_reset}"
+  echo -e "${c_green}User $user marked expired - $today${c_reset}"
   regen_config >/dev/null 2>&1 || true
   systemctl restart zivpn.service || true
 }
@@ -377,7 +377,7 @@ regen_config() {
   if [ -z "$arr" ] || [ "$arr" = "[]" ]; then arr='["zi"]'; fi
   jq --argjson arr "$arr" '.config = $arr' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
   local cnt=$(echo "$arr" | jq 'length')
-  echo -e "${c_cyan}Regenerated $CONFIG_FILE with $cnt active password(s)${c_reset}"
+  echo -e "${c_cyan}Regenerated $CONFIG_FILE with $cnt active passwords${c_reset}"
 }
 
 # --- Interactive menu (extended with backup/restore) ---
@@ -389,16 +389,16 @@ interactive_menu() {
     echo -e "${c_cyan}${c_bold}     ZIVPN UDP ACCOUNT MANAGER v1      ${c_reset}"
     echo -e "${c_cyan}${c_bold}========================================${c_reset}"
     echo ""
-    echo -e "  ${c_green}1)${c_reset} Tambah user (password = username)"
+    echo -e "  ${c_green}1)${c_reset} Tambah user - password = username"
     echo -e "  ${c_green}2)${c_reset} Hapus user"
     echo -e "  ${c_green}3)${c_reset} Daftar user"
     echo -e "  ${c_green}4)${c_reset} Info user"
     echo -e "  ${c_green}5)${c_reset} Tandai expired sekarang"
-    echo -e "  ${c_green}6)${c_reset} Regenerate config (aktifkan/deaktifkan berdasarkan expiry)"
+    echo -e "  ${c_green}6)${c_reset} Regenerate config - aktifkan/deaktifkan berdasarkan expiry"
     echo -e "  ${c_green}7)${c_reset} Backup -> buat file di server"
     echo -e "  ${c_green}8)${c_reset} Backup -> kirim ke Telegram"
     echo -e "  ${c_green}9)${c_reset} Restore <- ambil backup terbaru dari Telegram"
-    echo -e "  ${c_green}10)${c_reset} Setup ulang (Telegram config)"
+    echo -e "  ${c_green}10)${c_reset} Setup ulang - Telegram config"
     echo -e "  ${c_green}11)${c_reset} Exit"
     echo ""
     read -p $'\e[36mPilih nomor> \e[0m' choice
@@ -498,7 +498,7 @@ case "$1" in
     if [ "$2" = "tg" ] || [ "$2" = "telegram" ]; then backup_send_telegram_cmd; else backup_command; fi
     ;;
   restore)
-    if [ "$2" = "tg" ] || [ "$2" = "telegram" ]; then restore_from_telegram; else echo "restore requires 'tg' (telegram) as source"; fi
+    if [ "$2" = "tg" ] || [ "$2" = "telegram" ]; then restore_from_telegram; else echo "restore requires 'tg' or 'telegram' as source"; fi
     ;;
   *) echo "Unknown command"; exit 1 ;;
 esac
