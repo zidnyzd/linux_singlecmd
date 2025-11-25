@@ -312,7 +312,7 @@ restore_from_telegram() {
 add_user_cli() {
   local user="$1"; local days="$2"
   if [ -z "$user" ] || [ -z "$days" ]; then
-    echo -e "${c_red}add requires <username> <days>${c_reset}"; exit 1
+    echo -e "${c_red}add requires username and days${c_reset}"; exit 1
   fi
   local created=$(date -u +"%Y-%m-%d")
   local expires=$(date -u -d "$created +$days days" +"%Y-%m-%d")
@@ -330,7 +330,7 @@ add_user_cli() {
 
 del_user_cli() {
   local user="$1"
-  if [ -z "$user" ]; then echo "usage: del <username>"; exit 1; fi
+  if [ -z "$user" ]; then echo "usage: del username"; exit 1; fi
   if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User $user not found${c_reset}"; exit 1
   fi
@@ -350,7 +350,7 @@ list_users_cli() {
 
 info_user_cli() {
   local user="$1"
-  if [ -z "$user" ]; then echo "usage: info <username>"; exit 1; fi
+  if [ -z "$user" ]; then echo "usage: info username"; exit 1; fi
   if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User not found${c_reset}"; exit 1
   fi
@@ -359,7 +359,7 @@ info_user_cli() {
 
 expire_user_cli() {
   local user="$1"
-  if [ -z "$user" ]; then echo "usage: expire <username>"; exit 1; fi
+  if [ -z "$user" ]; then echo "usage: expire username"; exit 1; fi
   if ! jq -e --arg u "$user" '.[] | select(.username==$u)' "$USERS_FILE" >/dev/null 2>&1; then
     echo -e "${c_yellow}User $user not found${c_reset}"; exit 1
   fi
