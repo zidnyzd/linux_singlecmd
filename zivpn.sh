@@ -92,6 +92,20 @@ install_zivpn() {
     # Tuning Network
     sysctl -w net.core.rmem_max=16777216 > /dev/null 2>&1
     sysctl -w net.core.wmem_max=16777216 > /dev/null 2>&1
+    
+    # Disable IPv6 (Optional but recommended for stability)
+    echo -e "${YELLOW}Disabling IPv6...${NC}"
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1
+    sysctl -w net.ipv6.conf.lo.disable_ipv6=1 > /dev/null 2>&1
+    
+    # Persist Disable IPv6
+    if ! grep -q "net.ipv6.conf.all.disable_ipv6" /etc/sysctl.conf; then
+        echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+        echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+        sysctl -p > /dev/null 2>&1
+    fi
 
     # Create Service
     cat <<EOF > $SERVICE_FILE
