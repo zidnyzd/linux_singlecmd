@@ -404,6 +404,7 @@ renew_user() {
 
     # Ambil expiry lama (epoch timestamp)
     local current_exp=$(grep "^$user:" "$USER_DB" | cut -d: -f3)
+    local now=$(date +%s)
     
     # Validasi jika user ditemukan tapi corrupt (timestamp kosong)
     if [[ -z "$current_exp" ]]; then
@@ -411,7 +412,6 @@ renew_user() {
         current_exp=0
     fi
 
-    local now=$(date +%s)
     local days_in_seconds=$((days * 86400))
     local new_exp=0
 
@@ -519,6 +519,17 @@ backup_tg() {
     fi
     
     rm -f "$backup_file"
+}
+
+restore_tg() {
+    echo -e "${YELLOW}Restore requires manual file download currently.${NC}"
+    echo -e "Please upload the tar.gz file to /root/zivpn_restore.tar.gz and run this again."
+    # Implementation simplified for safety
+    if [ -f "/root/zivpn_restore.tar.gz" ]; then
+        tar -xzf "/root/zivpn_restore.tar.gz" -C /
+        update_config
+        echo -e "${GREEN}Restored successfully!${NC}"
+    fi
 }
 
 setup_cron() {
