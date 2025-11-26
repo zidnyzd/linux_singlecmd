@@ -625,7 +625,8 @@ menu() {
     
     # Cek koneksi & file size/hash header (cara cepat: cek header content-length atau download head)
     # Kita download file ke tmp untuk membandingkan
-    wget -q --timeout=3 --tries=1 "$REMOTE_URL" -O /tmp/zivpn-remote.sh
+    # echo "Checking for updates..." # Debug
+    wget -q --no-cache --timeout=3 --tries=1 "$REMOTE_URL" -O /tmp/zivpn-remote.sh
     
     if [ -s "/tmp/zivpn-remote.sh" ]; then
         # Bandingkan file lokal dan remote
@@ -634,6 +635,8 @@ menu() {
             cp /tmp/zivpn-remote.sh "$LOCAL_FILE"
             chmod +x "$LOCAL_FILE"
             rm -f /tmp/zivpn-remote.sh
+            
+            echo -e "${GREEN}Update installed. Restarting...${NC}"
             sleep 1
             exec "$LOCAL_FILE" menu
         fi

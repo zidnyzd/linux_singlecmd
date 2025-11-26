@@ -110,32 +110,32 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/set_ipv4_priority.sh && chmod +x set_ipv4_priority.sh && ./set_ipv4_priority.sh
   ```
 
-- **ZIVPN UDP User Manager**
-  Manajemen user UDP untuk zivpn dengan menu interaktif, CLI, dan backup/restore via Telegram
+- **ZIVPN UDP User Manager v2.3**
+  Manajemen user UDP untuk ZIVPN dengan fitur lengkap:
+  - **Manage User**: Add, Delete, Renew, List dengan tabel informatif.
+  - **Auto Features**: Auto-Sync to system command (`zivpn`), Auto-Update on startup, Auto-Expired Check (Cron), Auto-Backup to Telegram.
+  - **Monitoring**: Cek koneksi IP aktif.
+  - **Custom Domain**: Set domain server untuk display info.
+
+  **Instalasi:**
   ```bash
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/zivpn.sh && chmod +x zivpn.sh && ./zivpn.sh
   ```
   
-  **CLI Commands:**
-  ```bash
-  ./zivpn.sh add <username> <days>     # Tambah user baru
-  ./zivpn.sh del <username>             # Hapus user
-  ./zivpn.sh list                       # Daftar semua user
-  ./zivpn.sh info <username>            # Info detail user
-  ./zivpn.sh expire <username>          # Tandai user expired
-  ./zivpn.sh regen                      # Regenerate config
-  ./zivpn.sh backup                     # Buat backup lokal
-  ./zivpn.sh backup tg                  # Backup ke Telegram
-  ./zivpn.sh restore tg                 # Restore dari Telegram
-  ```
-  
-  **Telegram Configuration:**
-  - Buat file `/etc/zivpn/telegram.conf` dengan format:
-    ```
-    ZIVPN_TG_TOKEN=your_bot_token
-    ZIVPN_TG_CHATID=your_chat_id
-    ```
-  - Atau set environment variables: `ZIVPN_TG_TOKEN` dan `ZIVPN_TG_CHATID`
+  **Fitur Utama:**
+  1. **Shortcut Command**: Cukup ketik `zivpn` di terminal setelah install.
+  2. **Menu Interaktif**: Semua fitur bisa diakses lewat menu.
+  3. **CLI Commands**:
+     ```bash
+     zivpn add <user> <days>     # Tambah user (pass=user)
+     zivpn del <user>            # Hapus user
+     zivpn renew <user> <days>   # Perpanjang masa aktif
+     zivpn list                  # Cek list user & expired
+     zivpn monitor               # Monitor koneksi
+     zivpn backup                # Backup manual ke Telegram
+     zivpn xp                    # Manual cek expired (cron)
+     zivpn update                # Update script manual
+     ```
 
 ### 💻 System Optimization
 - **Repository Setup** (Debian 10/11/12 & Ubuntu 20/22/24)
