@@ -622,6 +622,8 @@ menu() {
     echo -e "ISP/Loc   : $isp, $country"
     echo -e "Status    : ZIVPN Service is $status_zivpn"
     echo -e "${BLUE}=========================================${NC}"
+    echo -e "  Credits By: ZidStore (t.me/storezid2)  "
+    echo -e "${BLUE}=========================================${NC}"
     echo -e "1.  Add User"
     echo -e "2.  Delete User"
     echo -e "3.  Renew User"
