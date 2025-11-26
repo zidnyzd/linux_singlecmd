@@ -702,12 +702,13 @@ menu() {
     echo -e "4.  List Users (Check)"
     echo -e "5.  Monitor Connections"
     echo -e "6.  Backup to Telegram"
-    echo -e "7.  Install / Re-Install ZIVPN"
-    echo -e "8.  Uninstall ZIVPN"
-    echo -e "9.  Update Script"
-    echo -e "10. Set Auto-Backup Time"
-    echo -e "11. Set/Change Domain"
-    echo -e "12. Exit"
+    echo -e "7.  Restore from Telegram"
+    echo -e "8.  Install / Re-Install ZIVPN"
+    echo -e "9.  Uninstall ZIVPN"
+    echo -e "10. Update Script"
+    echo -e "11. Set Auto-Backup Time"
+    echo -e "12. Set/Change Domain"
+    echo -e "13. Exit"
     echo -e "${BLUE}=========================================${NC}"
     read -p "Select Option: " opt
     case $opt in
@@ -717,12 +718,13 @@ menu() {
         4) check_user ;;
         5) monitor_login ;;
         6) backup_tg ;;
-        7) install_zivpn ;;
-        8) uninstall_zivpn ;;
-        9) update_script ;;
-        10) set_autobackup_time ;;
-        11) set_domain ;;
-        12) exit 0 ;;
+        7) restore_tg ;;
+        8) install_zivpn ;;
+        9) uninstall_zivpn ;;
+        10) update_script ;;
+        11) set_autobackup_time ;;
+        12) set_domain ;;
+        13) exit 0 ;;
         *) echo "Invalid option"; sleep 1; menu ;;
     esac
 }
