@@ -521,15 +521,151 @@ backup_tg() {
     rm -f "$backup_file"
 }
 
-restore_tg() {
-    echo -e "${YELLOW}Restore requires manual file download currently.${NC}"
-    echo -e "Please upload the tar.gz file to /root/zivpn_restore.tar.gz and run this again."
-    # Implementation simplified for safety
+restore_menu() {
+    echo -e "${BLUE}Select Restore Method:${NC}"
+    echo "1. Restore from Telegram (Auto-download)" # Future development
+    echo "2. Restore via Web Upload (Browser)"
+    echo "3. Manual File (/root/zivpn_restore.tar.gz)"
+    read -p "Select Option: " res_opt
+    
+    case $res_opt in
+        1)
+            # Simpel: minta user forward file ke bot, lalu bot kasih link? 
+            # Karena parsing update TG agak rumit di bash, kita arahkan ke Web Upload saja dulu atau tetap manual
+            echo -e "${YELLOW}Feature under development. Please use Web Upload.${NC}"
+            restore_web
+            ;;
+        2) restore_web ;;
+        3) restore_manual ;;
+        *) echo -e "${RED}Invalid option!${NC}" ;;
+    esac
+}
+
+restore_manual() {
     if [ -f "/root/zivpn_restore.tar.gz" ]; then
+        echo -e "${YELLOW}File found. Restoring...${NC}"
         tar -xzf "/root/zivpn_restore.tar.gz" -C /
         update_config
         echo -e "${GREEN}Restored successfully!${NC}"
+        rm -f "/root/zivpn_restore.tar.gz"
+    else
+        echo -e "${RED}File /root/zivpn_restore.tar.gz not found!${NC}"
     fi
+}
+
+restore_web() {
+    local port=8888
+    local ip=$(curl -s ifconfig.me)
+    local temp_py="/tmp/zivpn_upload.py"
+    
+    # Install python3 jika belum ada (harusnya sudah)
+    if ! command -v python3 &> /dev/null; then
+        apt-get install python3 -y > /dev/null 2>&1
+    fi
+
+    # Allow port firewall sementara
+    if command -v ufw &> /dev/null; then ufw allow $port/tcp >/dev/null 2>&1; fi
+    if command -v iptables &> /dev/null; then iptables -I INPUT -p tcp --dport $port -j ACCEPT >/dev/null 2>&1; fi
+
+    # Buat script python server sementara
+    cat <<EOF > $temp_py
+import http.server
+import cgi
+import os
+import sys
+
+PORT = $port
+UPLOAD_FILE = "/root/zivpn_restore.tar.gz"
+
+class UploadHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'''
+            <html>
+            <body style="font-family:sans-serif; text-align:center; padding-top:50px; background:#f0f0f0;">
+                <div style="background:white; padding:20px; border-radius:10px; width:300px; margin:auto; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                    <h2 style="color:#333;">ZIVPN Restore</h2>
+                    <p>Upload your <b>.tar.gz</b> backup file here.</p>
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="file" name="file" accept=".gz,.tar" required style="margin-bottom:15px;"><br>
+                        <input type="submit" value="Upload & Restore" style="background:#007bff; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">
+                    </form>
+                </div>
+            </body>
+            </html>
+        ''')
+
+    def do_POST(self):
+        try:
+            ctype, pdict = cgi.parse_header(self.headers['content-type'])
+            if ctype == 'multipart/form-data':
+                pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
+                fields = cgi.parse_multipart(self.rfile, pdict)
+                if 'file' in fields:
+                    with open(UPLOAD_FILE, 'wb') as f:
+                        f.write(fields['file'][0])
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(b'<html><body style="text-align:center; font-family:sans-serif; padding-top:50px;"><h2>Upload Successful!</h2><p>Restoring data... You can close this page.</p></body></html>')
+                    
+                    # Exit server after successful upload
+                    os._exit(0)
+        except Exception as e:
+            print(e)
+
+if __name__ == '__main__':
+    try:
+        from http.server import HTTPServer
+        server = HTTPServer(('', PORT), UploadHandler)
+        print(f"Server started on port {PORT}")
+        server.serve_forever()
+    except:
+        pass
+EOF
+
+    clear
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e "       WAITING FOR FILE UPLOAD...        "
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e "Open this link in your browser:"
+    echo -e "${GREEN}http://$ip:$port${NC}"
+    echo -e ""
+    echo -e "${YELLOW}The server will stop automatically after upload.${NC}"
+    echo -e "Press Ctrl+C to cancel."
+    
+    # Jalankan python server
+    python3 $temp_py
+    
+    # Hapus file temp & tutup port
+    rm -f $temp_py
+    if command -v ufw &> /dev/null; then ufw delete allow $port/tcp >/dev/null 2>&1; fi
+    if command -v iptables &> /dev/null; then iptables -D INPUT -p tcp --dport $port -j ACCEPT >/dev/null 2>&1; fi
+    
+    echo -e "\n${BLUE}Processing file...${NC}"
+    
+    # Proses Restore
+    if [ -f "/root/zivpn_restore.tar.gz" ]; then
+        # Hapus config lama dulu biar bersih
+        rm -rf $DIR/*
+        
+        tar -xzf "/root/zivpn_restore.tar.gz" -C /
+        rm -f "/root/zivpn_restore.tar.gz"
+        
+        # Fix permission & restart
+        chmod -R 755 $DIR
+        update_config
+        
+        echo -e "${GREEN}Restore Completed Successfully!${NC}"
+        echo -e "${YELLOW}Your users and settings are back.${NC}"
+    else
+        echo -e "${RED}Restore failed. File not received.${NC}"
+    fi
+    
+    read -p "Press Enter to return..."
 }
 
 setup_cron() {
@@ -713,7 +849,7 @@ menu() {
     echo -e "4.  List Users (Check)"
     echo -e "5.  Monitor Connections"
     echo -e "6.  Backup to Telegram"
-    echo -e "7.  Restore from Telegram"
+    echo -e "7.  Restore Data"
     echo -e "8.  Install / Re-Install ZIVPN"
     echo -e "9.  Uninstall ZIVPN"
     echo -e "10. Update Script"
@@ -729,7 +865,7 @@ menu() {
         4) check_user ;;
         5) monitor_login ;;
         6) backup_tg ;;
-        7) restore_tg ;;
+        7) restore_menu ;;
         8) install_zivpn ;;
         9) uninstall_zivpn ;;
         10) update_script ;;
@@ -769,6 +905,7 @@ case $1 in
     list|info) check_user ;;
     monitor) monitor_login ;;
     backup) backup_tg ;;
+    restore) restore_menu ;;
     menu) menu ;;
     *) menu ;;
 esac
