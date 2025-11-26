@@ -4,7 +4,7 @@
 DIR="/etc/zivpn"
 CONFIG_FILE="$DIR/config.json"
 USER_DB="$DIR/passwd"
-BIN="/usr/local/bin/zivpn"
+BIN="/usr/local/bin/zivpn-core" # Rename binary core agar tidak bentrok dengan menu command
 SERVICE_FILE="/etc/systemd/system/zivpn.service"
 
 # Set Timezone to GMT+7 (Asia/Jakarta) for this script session
@@ -213,8 +213,21 @@ uninstall_zivpn() {
     systemctl disable zivpn.service 2>/dev/null
     rm -f $SERVICE_FILE
     systemctl daemon-reload
+    
+    # Remove binary core
     rm -f $BIN
+    
+    # Remove menu shortcuts
+    rm -f /usr/local/bin/zivpn
+    rm -f /usr/bin/zivpn
+    rm -f /usr/bin/menu
+    
     rm -rf $DIR
+    
+    # Remove cron
+    crontab -l 2>/dev/null | grep -v "zivpn.sh" > /tmp/cron_zivpn
+    crontab /tmp/cron_zivpn
+    rm -f /tmp/cron_zivpn
     
     # Attempt to remove firewall rules
     if command -v iptables &> /dev/null; then
