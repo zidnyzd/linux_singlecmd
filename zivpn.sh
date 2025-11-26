@@ -7,6 +7,9 @@ USER_DB="$DIR/passwd"
 BIN="/usr/local/bin/zivpn"
 SERVICE_FILE="/etc/systemd/system/zivpn.service"
 
+# Set Timezone to GMT+7 (Asia/Jakarta) for this script session
+export TZ='Asia/Jakarta'
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -249,10 +252,24 @@ add_user() {
     # Update Config ZIVPN
     update_config
     
-    echo -e "${GREEN}User added successfully!${NC}"
-    echo -e "Username: $user"
-    echo -e "Password: $user"
-    echo -e "Expired : $(date -d @$exp_date)"
+    # Get info for display
+    local domain=$(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)
+    local exp_display=$(date -d "@$exp_date" "+%d-%m-%Y")
+    
+    clear
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e "          ZIVPN ACCOUNT CREATED          "
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e " Domain     : ${GREEN}$domain${NC}"
+    echo -e " Port UDP   : ${GREEN}5667${NC} (or 6000-19999)"
+    echo -e " Username   : ${GREEN}$user${NC}"
+    echo -e " Password   : ${GREEN}$pass${NC}"
+    echo -e " Valid Days : ${GREEN}$days Days${NC}"
+    echo -e " Expires On : ${GREEN}$exp_display${NC}"
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e " ${YELLOW}Copy this info to your ZIVPN Client${NC}"
+    echo -e "${BLUE}=========================================${NC}"
+    read -p "Press Enter to return..."
 }
 
 del_user() {
@@ -599,6 +616,31 @@ set_domain() {
 
 menu() {
     clear
+    
+    # --- Auto Update Check ---
+    # Cek update hanya jika belum dicek dalam sesi ini (opsional, atau selalu cek)
+    # Untuk kecepatan, kita set timeout pendek
+    local REMOTE_URL="https://raw.githubusercontent.com/zidnyzd/linux/main/zivpn.sh"
+    local LOCAL_FILE="/usr/local/bin/zivpn"
+    
+    # Cek koneksi & file size/hash header (cara cepat: cek header content-length atau download head)
+    # Kita download file ke tmp untuk membandingkan
+    wget -q --timeout=3 --tries=1 "$REMOTE_URL" -O /tmp/zivpn-remote.sh
+    
+    if [ -s "/tmp/zivpn-remote.sh" ]; then
+        # Bandingkan file lokal dan remote
+        if ! cmp -s "$LOCAL_FILE" "/tmp/zivpn-remote.sh"; then
+            echo -e "${YELLOW}New update available! Auto-updating...${NC}"
+            cp /tmp/zivpn-remote.sh "$LOCAL_FILE"
+            chmod +x "$LOCAL_FILE"
+            rm -f /tmp/zivpn-remote.sh
+            sleep 1
+            exec "$LOCAL_FILE" menu
+        fi
+        rm -f /tmp/zivpn-remote.sh
+    fi
+    # -------------------------
+
     # Get System Info
     local os_name=$(cat /etc/os-release | grep -w PRETTY_NAME | cut -d= -f2 | tr -d '"')
     local public_ip=$(curl -s ifconfig.me)
@@ -659,6 +701,17 @@ menu() {
 if [ $(id -u) -ne 0 ]; then
     echo "This script must be run as root"
     exit 1
+fi
+
+# Auto-Sync Local Edit to System Command
+# Jika script ini BUKAN di lokasi sistem tapi lokasi sistem ada, maka update lokasi sistem
+if [ "$0" != "/usr/local/bin/zivpn" ] && [ -f "/usr/local/bin/zivpn" ]; then
+    # Hanya update jika file berbeda (cegah loop atau unnecessary write)
+    if ! cmp -s "$0" "/usr/local/bin/zivpn"; then
+        cp "$0" "/usr/local/bin/zivpn"
+        chmod +x "/usr/local/bin/zivpn"
+        # echo "System command 'zivpn' updated from local file."
+    fi
 fi
 
 # CLI Argument Handling
