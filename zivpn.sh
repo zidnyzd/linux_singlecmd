@@ -479,6 +479,13 @@ renew_user() {
         read -p "Add Days: " days
     fi
 
+    # Sanitize days
+    days=$(echo "$days" | tr -dc '0-9')
+    if [[ -z "$days" ]]; then
+        echo -e "${RED}Invalid Days.${NC}"
+        return
+    fi
+
     if [[ -z "$user" ]]; then
         echo -e "${RED}Invalid selection!${NC}"
         return
