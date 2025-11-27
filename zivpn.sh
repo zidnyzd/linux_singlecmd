@@ -286,6 +286,13 @@ add_user() {
     # Ensure pass is set
     if [[ -z "$pass" ]]; then pass="$user"; fi
 
+    # Sanitize days (numbers only)
+    days=$(echo "$days" | tr -dc '0-9')
+    if [[ -z "$days" ]]; then
+        echo -e "${RED}Error: Invalid Days.${NC}"
+        return
+    fi
+
     local exp_date=$(date -d "+$days days" +%s)
 
     # Simpan ke DB
