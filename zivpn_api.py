@@ -36,7 +36,7 @@ def parse_zivpn_output(output):
         "domain": r"Domain\s*:\s*(.+)", # Mengambil teks setelah "Domain :" tapi mengabaikan kode warna ANSI
         "username": r"Username\s*:\s*(.+)",
         "password": r"Password\s*:\s*(.+)",
-        "expired": r"Expires (On|At)\s*:\s*(.+)",
+        "expired": r"Expires (?:On|At)\s*:\s*(.+)",
         "port": r"Port UDP\s*:\s*(\d+)"
     }
     
@@ -128,7 +128,10 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
                 days = params.get("days", ["30"])[0]
                 if user:
                     raw = run_zivpn_cmd(["renew", user, days])
-                    response = {"status": "success", "message": "Processed", "raw": raw}
+                    if "not found" in raw or "Invalid" in raw:
+                        response = {"status": "error", "message": raw.strip(), "raw": raw}
+                    else:
+                        response = {"status": "success", "message": "Processed", "raw": raw}
                 else:
                     response["message"] = "Missing user parameter"
                     

@@ -246,11 +246,27 @@ uninstall_zivpn() {
 
 add_user() {
     local user=$1
-    local days=$2
+    local pass=$2
+    local days=$3
+    
+    # Support legacy usage: add <user> <days> (where pass is treated as days)
+    if [[ -z "$days" && "$pass" =~ ^[0-9]+$ ]]; then
+        days=$pass
+        pass=$user
+    fi
     
     # Jika input kosong, minta input interaktif
     if [[ -z "$user" ]]; then
         read -p "Username : " user
+    fi
+    
+    if [[ -z "$pass" ]]; then
+        if [[ -z "$ZIVPN_API_MODE" ]]; then
+            read -p "Password (Enter for default): " input_pass
+            pass="${input_pass:-$user}"
+        else
+            pass="$user"
+        fi
     fi
     
     if [[ -z "$days" ]]; then
@@ -269,8 +285,6 @@ add_user() {
         return
     fi
 
-    # Set password = user
-    local pass="$user"
     local exp_date=$(date -d "+$days days" +%s)
 
     # Simpan ke DB
