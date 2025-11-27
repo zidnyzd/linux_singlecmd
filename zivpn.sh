@@ -246,11 +246,25 @@ uninstall_zivpn() {
 
 add_user() {
     local user=$1
-    local days=$2
+    local pass=$2
+    local days=$3
     
+    # Auto-detect arguments (if days is empty, assume 2nd arg is days and pass=user)
+    if [[ -z "$days" ]]; then
+        if [[ -n "$pass" ]]; then
+            days="$pass"
+            pass="$user"
+        fi
+    fi
+
     # Jika input kosong, minta input interaktif
     if [[ -z "$user" ]]; then
         read -p "Username : " user
+    fi
+    
+    if [[ -z "$pass" ]]; then
+         read -p "Password (Enter for '$user'): " pass
+         if [[ -z "$pass" ]]; then pass="$user"; fi
     fi
     
     if [[ -z "$days" ]]; then
@@ -268,9 +282,10 @@ add_user() {
         echo -e "${RED}User $user already exists!${NC}"
         return
     fi
+    
+    # Ensure pass is set
+    if [[ -z "$pass" ]]; then pass="$user"; fi
 
-    # Set password = user
-    local pass="$user"
     local exp_date=$(date -d "+$days days" +%s)
 
     # Simpan ke DB
@@ -1159,7 +1174,7 @@ case $1 in
     uninstall) uninstall_zivpn ;;
     xp) check_expired_cron ;;
     backup_auto) backup_auto_cron ;;
-    add) add_user "$2" "$3" ;;
+    add) add_user "$2" "$3" "$4" ;;
     trial) add_trial "$2" "$3" ;;
     del) del_user "$2" ;;
     renew) renew_user "$2" "$3" ;;
