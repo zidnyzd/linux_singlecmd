@@ -299,6 +299,53 @@ add_user() {
     read -p "Press Enter to return..."
 }
 
+add_trial() {
+    local user=$1
+    local mins=$2
+    
+    echo -e "${BLUE}Create Trial Account${NC}"
+    
+    if [[ -z "$user" ]]; then
+        read -p "Username : " user
+    fi
+    
+    if [[ -z "$mins" ]]; then
+        read -p "Minutes  : " mins
+    fi
+
+    if [[ -z "$user" || -z "$mins" ]]; then
+        echo -e "${RED}Error: Username and Minutes are required.${NC}"
+        return
+    fi
+
+    if grep -q "^$user:" "$USER_DB"; then
+        echo -e "${RED}User $user already exists!${NC}"
+        return
+    fi
+
+    local pass="$user"
+    local now=$(date +%s)
+    local exp_date=$((now + (mins * 60))) # Kalkulasi menit ke detik
+
+    echo "$user:$pass:$exp_date" >> "$USER_DB"
+    update_config
+    
+    local domain=$(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)
+    local exp_time=$(date -d "@$exp_date" "+%H:%M:%S")
+    
+    clear
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e "           ZIVPN TRIAL CREATED           "
+    echo -e "${BLUE}=========================================${NC}"
+    echo -e " Domain     : ${GREEN}$domain${NC}"
+    echo -e " Username   : ${GREEN}$user${NC}"
+    echo -e " Password   : ${GREEN}$pass${NC}"
+    echo -e " Valid Mins : ${GREEN}$mins Minutes${NC}"
+    echo -e " Expires At : ${GREEN}$exp_time${NC}"
+    echo -e "${BLUE}=========================================${NC}"
+    read -p "Press Enter to return..."
+}
+
 del_user() {
     local user=$1
     
@@ -688,8 +735,8 @@ setup_cron() {
     # Clean old jobs
     crontab -l 2>/dev/null | grep -v "zivpn.sh" > /tmp/cron_zivpn
     
-    # 1. Check expired every hour
-    echo "0 * * * * $script_path xp" >> /tmp/cron_zivpn
+    # 1. Check expired every minute (for trial accuracy)
+    echo "* * * * * $script_path xp" >> /tmp/cron_zivpn
     
     # 2. Auto backup based on custom config
     echo "$cron_time $script_path backup_auto" >> /tmp/cron_zivpn
@@ -755,7 +802,26 @@ monitor_login() {
 
 # Fungsi khusus untuk cronjob (tanpa output berlebih)
 check_expired_cron() {
-    update_config
+    # Logika: Cek user expired, hapus dari DB, lalu update config
+    local now=$(date +%s)
+    local tmp_db="$USER_DB.tmp"
+    local changed=0
+
+    # Filter hanya user yang MASIH AKTIF (Expire > Now) ke file temp
+    # User expired akan otomatis terbuang (terhapus)
+    awk -v now="$now" -F: '$3 > now' "$USER_DB" > "$tmp_db"
+
+    # Cek apakah ada perubahan jumlah baris (artinya ada user expired yg dihapus)
+    local old_lines=$(wc -l < "$USER_DB")
+    local new_lines=$(wc -l < "$tmp_db")
+
+    if [ "$old_lines" -ne "$new_lines" ]; then
+        mv "$tmp_db" "$USER_DB"
+        # Jika ada yang dihapus, reload config & restart service
+        update_config
+    else
+        rm -f "$tmp_db"
+    fi
 }
 
 backup_auto_cron() {
@@ -844,34 +910,36 @@ menu() {
     echo -e "  Credits By: ZidStore (t.me/storezid2)  "
     echo -e "${BLUE}=========================================${NC}"
     echo -e "1.  Add User"
-    echo -e "2.  Delete User"
-    echo -e "3.  Renew User"
-    echo -e "4.  List Users (Check)"
-    echo -e "5.  Monitor Connections"
-    echo -e "6.  Backup to Telegram"
-    echo -e "7.  Restore Data"
-    echo -e "8.  Install / Re-Install ZIVPN"
-    echo -e "9.  Uninstall ZIVPN"
-    echo -e "10. Update Script"
-    echo -e "11. Set Auto-Backup Time"
-    echo -e "12. Set/Change Domain"
-    echo -e "13. Exit"
+    echo -e "2.  Add Trial Account"
+    echo -e "3.  Delete User"
+    echo -e "4.  Renew User"
+    echo -e "5.  List Users (Check)"
+    echo -e "6.  Monitor Connections"
+    echo -e "7.  Backup to Telegram"
+    echo -e "8.  Restore Data"
+    echo -e "9.  Install / Re-Install ZIVPN"
+    echo -e "10. Uninstall ZIVPN"
+    echo -e "11. Update Script"
+    echo -e "12. Set Auto-Backup Time"
+    echo -e "13. Set/Change Domain"
+    echo -e "14. Exit"
     echo -e "${BLUE}=========================================${NC}"
     read -p "Select Option: " opt
     case $opt in
         1) add_user ;;
-        2) del_user ;;
-        3) renew_user ;;
-        4) check_user ;;
-        5) monitor_login ;;
-        6) backup_tg ;;
-        7) restore_menu ;;
-        8) install_zivpn ;;
-        9) uninstall_zivpn ;;
-        10) update_script ;;
-        11) set_autobackup_time ;;
-        12) set_domain ;;
-        13) exit 0 ;;
+        2) add_trial ;;
+        3) del_user ;;
+        4) renew_user ;;
+        5) check_user ;;
+        6) monitor_login ;;
+        7) backup_tg ;;
+        8) restore_menu ;;
+        9) install_zivpn ;;
+        10) uninstall_zivpn ;;
+        11) update_script ;;
+        12) set_autobackup_time ;;
+        13) set_domain ;;
+        14) exit 0 ;;
         *) echo "Invalid option"; sleep 1; menu ;;
     esac
 }
@@ -900,6 +968,7 @@ case $1 in
     xp) check_expired_cron ;;
     backup_auto) backup_auto_cron ;;
     add) add_user "$2" "$3" ;;
+    trial) add_trial "$2" "$3" ;;
     del) del_user "$2" ;;
     renew) renew_user "$2" "$3" ;;
     list|info) check_user ;;
