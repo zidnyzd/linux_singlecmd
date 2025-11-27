@@ -281,7 +281,7 @@ add_user() {
     
     # Get info for display
     local domain=$(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)
-    local exp_display=$(date -d "@$exp_date" "+%d-%m-%Y")
+    local exp_display=$(date -d "@$exp_date" "+%d-%m-%Y %H:%M")
     
     clear
     echo -e "${BLUE}=========================================${NC}"
@@ -353,7 +353,7 @@ del_user() {
     if [[ -z "$user" ]]; then
         echo -e "${YELLOW}Select User to Delete:${NC}"
         echo "--------------------------------------------------------------"
-        printf "%-5s %-15s %-30s\n" "No" "Username" "Expired"
+        printf "%-5s %-15s %-35s\n" "No" "Username" "Expired"
         echo "--------------------------------------------------------------"
         
         local i=1
@@ -363,14 +363,14 @@ del_user() {
             if [[ -z "$u" ]]; then continue; fi
             if [[ -z "$e" || ! "$e" =~ ^[0-9]+$ ]]; then e=0; fi
             
-            local exp_readable=$(date -d "@$e" "+%d-%m-%Y")
+            local exp_readable=$(date -d "@$e" "+%d-%m-%Y %H:%M")
             local diff=$((e - now))
             local days_left=$((diff / 86400))
             if [[ "$e" -lt "$now" ]]; then days_left=0; fi
             
             local exp_display="$exp_readable ($days_left Days)"
             
-            printf "%-5s %-15s %-30s\n" "$i" "$u" "$exp_display"
+            printf "%-5s %-15s %-35s\n" "$i" "$u" "$exp_display"
             users[$i]="$u"
             ((i++))
         done < "$USER_DB"
@@ -408,7 +408,7 @@ renew_user() {
     if [[ -z "$user" ]]; then
         echo -e "${YELLOW}Select User to Renew:${NC}"
         echo "--------------------------------------------------------------"
-        printf "%-5s %-15s %-30s\n" "No" "Username" "Expired"
+        printf "%-5s %-15s %-35s\n" "No" "Username" "Expired"
         echo "--------------------------------------------------------------"
         
         local i=1
@@ -418,14 +418,14 @@ renew_user() {
             if [[ -z "$u" ]]; then continue; fi
             if [[ -z "$e" || ! "$e" =~ ^[0-9]+$ ]]; then e=0; fi
             
-            local exp_readable=$(date -d "@$e" "+%d-%m-%Y")
+            local exp_readable=$(date -d "@$e" "+%d-%m-%Y %H:%M")
             local diff=$((e - now))
             local days_left=$((diff / 86400))
             if [[ "$e" -lt "$now" ]]; then days_left=0; fi
             
             local exp_display="$exp_readable ($days_left Days)"
             
-            printf "%-5s %-15s %-30s\n" "$i" "$u" "$exp_display"
+            printf "%-5s %-15s %-35s\n" "$i" "$u" "$exp_display"
             users[$i]="$u"
             ((i++))
         done < "$USER_DB"
@@ -490,9 +490,9 @@ renew_user() {
 
 check_user() {
     echo -e "${YELLOW}Checking User Database...${NC}"
-    echo "------------------------------------------------------------------------------"
-    printf "%-15s %-15s %-30s %b\n" "Username" "Password" "Expires On" "Status"
-    echo "------------------------------------------------------------------------------"
+    echo "----------------------------------------------------------------------------------"
+    printf "%-15s %-15s %-35s %b\n" "Username" "Password" "Expires On" "Status"
+    echo "----------------------------------------------------------------------------------"
     
     local now=$(date +%s)
     local l_user l_pass l_exp
@@ -504,7 +504,7 @@ check_user() {
             l_exp=0
         fi
         
-        local exp_readable=$(date -d "@$l_exp" "+%d-%m-%Y")
+        local exp_readable=$(date -d "@$l_exp" "+%d-%m-%Y %H:%M")
         local diff=$((l_exp - now))
         local days_left=$((diff / 86400))
         
@@ -514,12 +514,12 @@ check_user() {
             days_left=0
         fi
         
-        # Format: DD-MM-YYYY (X Days)
+        # Format: DD-MM-YYYY HH:MM (X Days)
         local exp_display="$exp_readable ($days_left Days)"
         
-        printf "%-15s %-15s %-30s %b\n" "$l_user" "$l_pass" "$exp_display" "$status"
+        printf "%-15s %-15s %-35s %b\n" "$l_user" "$l_pass" "$exp_display" "$status"
     done < "$USER_DB"
-    echo "------------------------------------------------------------------------------"
+    echo "----------------------------------------------------------------------------------"
 }
 
 backup_tg() {
