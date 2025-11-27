@@ -279,6 +279,16 @@ add_user() {
     # Update Config ZIVPN
     update_config
     
+    # Jika Mode API (ZIVPN_API_MODE=1), skip output interaktif/clear
+    if [[ "$ZIVPN_API_MODE" == "1" ]]; then
+        # Output simple format for parsing
+        echo "Domain : $(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)"
+        echo "Username : $user"
+        echo "Password : $pass"
+        echo "Expires On : $(date -d "@$exp_date" "+%d-%m-%Y %H:%M")"
+        return
+    fi
+    
     # Get info for display
     local domain=$(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)
     local exp_display=$(date -d "@$exp_date" "+%d-%m-%Y %H:%M")
@@ -387,6 +397,14 @@ del_user() {
 
     if ! grep -q "^$user:" "$USER_DB"; then
         echo -e "${RED}User $user not found!${NC}"
+        return
+    fi
+
+    # Jika Mode API, skip konfirmasi
+    if [[ "$ZIVPN_API_MODE" == "1" ]]; then
+        sed -i "/^$user:/d" "$USER_DB"
+        update_config
+        echo "User $user deleted"
         return
     fi
 
@@ -715,6 +733,178 @@ EOF
     read -p "Press Enter to return..."
 }
 
+install_api() {
+    echo -e "${BLUE}Installing ZIVPN API Service...${NC}"
+    
+    # Install Python3 if missing
+    if ! command -v python3 &> /dev/null; then
+        apt-get install python3 -y
+    fi
+    
+    local api_file="/etc/zivpn/api.py"
+    local api_svc="/etc/systemd/system/zivpn-api.service"
+    local api_key_file="/etc/zivpn/api_key"
+    
+    # Generate random key if not exists
+    if [ ! -f "$api_key_file" ]; then
+        tr -dc A-Za-z0-9 </dev/urandom | head -c 16 > "$api_key_file"
+    fi
+    local current_key=$(cat "$api_key_file")
+    
+    # Write API Script
+    cat <<'EOF_PY' > "$api_file"
+import http.server
+import socketserver
+import urllib.parse
+import subprocess
+import json
+import re
+import os
+
+PORT = 9999
+API_KEY_FILE = "/etc/zivpn/api_key"
+
+def run_zivpn_cmd(args):
+    # Add --api flag to bypass interactivity if supported, or rely on args presence
+    cmd = ["/usr/local/bin/zivpn"] + args
+    try:
+        # Set environment var to tell zivpn script to be quiet/non-interactive
+        env = os.environ.copy()
+        env["ZIVPN_API_MODE"] = "1" 
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        return result.stdout
+    except Exception as e:
+        return str(e)
+
+def parse_zivpn_output(output):
+    data = {}
+    # Regex patterns
+    patterns = {
+        "domain": r"Domain\s*:\s*(.+)", 
+        "username": r"Username\s*:\s*(.+)",
+        "password": r"Password\s*:\s*(.+)",
+        "expired": r"Expires (On|At)\s*:\s*(.+)",
+        "port": r"Port UDP\s*:\s*(\d+)"
+    }
+    
+    # Clean ANSI codes
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    clean_output = ansi_escape.sub('', output)
+    
+    for key, pattern in patterns.items():
+        match = re.search(pattern, clean_output)
+        if match:
+            data[key] = match.group(1).strip()
+            
+    return data
+
+class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        parsed_path = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed_path.query)
+        
+        # Auth Check
+        auth = params.get("auth", [""])[0]
+        real_key = "zivpn123"
+        if os.path.exists(API_KEY_FILE):
+            with open(API_KEY_FILE, "r") as f:
+                real_key = f.read().strip()
+            
+        if auth != real_key:
+            self.send_response(401)
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "error", "message": "Unauthorized"}).encode())
+            return
+
+        path = parsed_path.path
+        response = {"status": "error", "message": "Invalid endpoint"}
+        
+        try:
+            if path == "/add":
+                user = params.get("user", [""])[0]
+                days = params.get("days", ["30"])[0]
+                if user:
+                    raw = run_zivpn_cmd(["add", user, days])
+                    data = parse_zivpn_output(raw)
+                    if data.get("username"):
+                        response = {"status": "success", "data": data}
+                    else:
+                        response = {"status": "error", "message": "Failed", "raw": raw}
+                else:
+                    response["message"] = "Missing user"
+
+            elif path == "/trial":
+                user = params.get("user", [""])[0]
+                mins = params.get("mins", ["30"])[0]
+                if user:
+                    raw = run_zivpn_cmd(["trial", user, mins])
+                    data = parse_zivpn_output(raw)
+                    if data.get("username"):
+                        response = {"status": "success", "data": data}
+                    else:
+                        response = {"status": "error", "message": "Failed", "raw": raw}
+                else:
+                    response["message"] = "Missing user"
+            
+            elif path == "/del":
+                user = params.get("user", [""])[0]
+                if user:
+                    # Force delete logic must be handled in zivpn.sh
+                    raw = run_zivpn_cmd(["del", user]) 
+                    response = {"status": "success", "raw": raw}
+                else:
+                    response["message"] = "Missing user"
+                    
+        except Exception as e:
+            response = {"status": "error", "message": str(e)}
+
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(response).encode())
+
+if __name__ == "__main__":
+    os.chdir("/tmp") 
+    with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
+        print(f"ZIVPN API serving at port {PORT}")
+        httpd.serve_forever()
+EOF_PY
+
+    # Create Service
+    cat <<EOF > $api_svc
+[Unit]
+Description=ZIVPN API Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 $api_file
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable zivpn-api
+    systemctl restart zivpn-api
+    
+    # Open Port
+    if command -v ufw &> /dev/null; then ufw allow 9999/tcp; fi
+    if command -v iptables &> /dev/null; then iptables -I INPUT -p tcp --dport 9999 -j ACCEPT; fi
+    
+    echo -e "${GREEN}API Service Installed!${NC}"
+    echo -e "Port    : 9999"
+    echo -e "Auth Key: ${YELLOW}$current_key${NC}"
+    echo -e "Endpoints:"
+    echo -e "  /add?user=...&days=...&auth=KEY"
+    echo -e "  /trial?user=...&mins=...&auth=KEY"
+    echo -e "  /del?user=...&auth=KEY"
+    read -p "Press Enter to return..."
+}
+
 setup_cron() {
     echo -e "${GREEN}Setting up Cron jobs for Auto-Expired & Auto-Backup...${NC}"
     
@@ -922,7 +1112,8 @@ menu() {
     echo -e "11. Update Script"
     echo -e "12. Set Auto-Backup Time"
     echo -e "13. Set/Change Domain"
-    echo -e "14. Exit"
+    echo -e "14. Install API Service"
+    echo -e "15. Exit"
     echo -e "${BLUE}=========================================${NC}"
     read -p "Select Option: " opt
     case $opt in
@@ -939,7 +1130,8 @@ menu() {
         11) update_script ;;
         12) set_autobackup_time ;;
         13) set_domain ;;
-        14) exit 0 ;;
+        14) install_api ;;
+        15) exit 0 ;;
         *) echo "Invalid option"; sleep 1; menu ;;
     esac
 }
