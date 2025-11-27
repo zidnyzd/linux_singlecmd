@@ -525,6 +525,15 @@ renew_user() {
     mv "$temp_db" "$USER_DB"
     
     update_config
+
+    # Jika Mode API (ZIVPN_API_MODE=1), output format parsing
+    if [[ "$ZIVPN_API_MODE" == "1" ]]; then
+        echo "Domain : $(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)"
+        echo "Username : $user"
+        echo "Expires On : $(date -d "@$new_exp" "+%d-%m-%Y %H:%M")"
+        return
+    fi
+
     echo -e "${GREEN}User $user renewed until $(date -d @$new_exp)!${NC}"
 }
 
