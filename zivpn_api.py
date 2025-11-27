@@ -128,10 +128,7 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
                 days = params.get("days", ["30"])[0]
                 if user:
                     raw = run_zivpn_cmd(["renew", user, days])
-                    if "not found" in raw or "Invalid" in raw:
-                        response = {"status": "error", "message": raw.strip(), "raw": raw}
-                    else:
-                        response = {"status": "success", "message": "Processed", "raw": raw}
+                    response = {"status": "success", "message": "Processed", "raw": raw}
                 else:
                     response["message"] = "Missing user parameter"
                     
