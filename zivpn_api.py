@@ -5,18 +5,19 @@ import subprocess
 import json
 import re
 import os
+import socket
+from datetime import datetime
 
 PORT = 9999
 AUTH_KEY = "zivpn123" # Default key, sebaiknya diubah
 
 def run_zivpn_cmd(args):
-    # Menjalankan zivpn cli
-    # Kita asumsikan zivpn.sh sudah mendukung output JSON/Clean via flag atau kita parsing manual
-    # Untuk saat ini kita parsing manual output zivpn.sh standar
-    
+    # Menjalankan zivpn cli dengan API mode
     cmd = ["/usr/local/bin/zivpn"] + args
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        env = os.environ.copy()
+        env["ZIVPN_API_MODE"] = "1"
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
         return result.stdout
     except Exception as e:
         return str(e)
@@ -48,6 +49,40 @@ def parse_zivpn_output(output):
         match = re.search(pattern, clean_output)
         if match:
             data[key] = match.group(1).strip()
+    
+    # Fallback: Parse interactive output format (e.g., "User jjj renewed until Mon Dec  1 11:38:34 AM WIB 2025!")
+    if not data.get("username"):
+        # Try to extract from "User X renewed until DATE"
+        renew_match = re.search(r'User\s+(\w+)\s+renewed\s+until\s+(.+)!', clean_output)
+        if renew_match:
+            data["username"] = renew_match.group(1).strip()
+            # Try to parse the date and convert to DD-MM-YYYY HH:MM format
+            date_str = renew_match.group(2).strip()
+            try:
+                # Try common date formats
+                for fmt in ["%a %b %d %I:%M:%S %p %Z %Y", "%a %b  %d %I:%M:%S %p %Z %Y", "%a %b %d %H:%M:%S %Z %Y"]:
+                    try:
+                        dt = datetime.strptime(date_str, fmt)
+                        data["expired"] = dt.strftime("%d-%m-%Y %H:%M")
+                        break
+                    except:
+                        continue
+                if "expired" not in data:
+                    data["expired"] = date_str  # Fallback: use original string
+            except:
+                data["expired"] = date_str  # Fallback: use original string
+            
+            # Get domain from file if not in output
+            if not data.get("domain"):
+                try:
+                    if os.path.exists("/etc/zivpn/domain"):
+                        with open("/etc/zivpn/domain", "r") as f:
+                            data["domain"] = f.read().strip()
+                    else:
+                        # Fallback to IP
+                        data["domain"] = socket.gethostbyname(socket.gethostname())
+                except:
+                    data["domain"] = "unknown"
             
     return data
 
