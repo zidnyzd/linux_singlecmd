@@ -60,12 +60,21 @@ update_config() {
         wget https://raw.githubusercontent.com/zahidbd2/udp-zivpn/main/config.json -O $CONFIG_FILE > /dev/null 2>&1
     fi
 
+    # Baca config lama untuk perbandingan
+    local old_config_line=$(grep -o '"config":.*' "$CONFIG_FILE" | head -1)
+    
+    # Bandingkan config baru dengan config lama
+    if [ "$old_config_line" = "$new_config_line" ]; then
+        # Config tidak berubah, tidak perlu restart
+        return 0
+    fi
+
     # Gunakan SED untuk mengganti baris "config": [...]
     # Asumsi format file asli: "config": [ ... ]
     # Kita cari baris yang mengandung "config": dan ganti seluruhnya
     sed -i "s/\"config\":.*/$new_config_line/g" "$CONFIG_FILE"
     
-    # Restart service
+    # Restart service hanya jika config benar-benar berubah
     systemctl restart zivpn
 }
 
