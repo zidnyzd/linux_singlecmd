@@ -798,124 +798,24 @@ install_api() {
     fi
     local current_key=$(cat "$api_key_file")
     
-    # Write API Script
-    cat <<'EOF_PY' > "$api_file"
-import http.server
-import socketserver
-import urllib.parse
-import subprocess
-import json
-import re
-import os
-
-PORT = 9999
-API_KEY_FILE = "/etc/zivpn/api_key"
-
-def run_zivpn_cmd(args):
-    # Add --api flag to bypass interactivity if supported, or rely on args presence
-    cmd = ["/usr/local/bin/zivpn"] + args
-    try:
-        # Set environment var to tell zivpn script to be quiet/non-interactive
-        env = os.environ.copy()
-        env["ZIVPN_API_MODE"] = "1" 
-        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
-        return result.stdout
-    except Exception as e:
-        return str(e)
-
-def parse_zivpn_output(output):
-    data = {}
-    # Regex patterns
-    patterns = {
-        "domain": r"Domain\s*:\s*(.+)", 
-        "username": r"Username\s*:\s*(.+)",
-        "password": r"Password\s*:\s*(.+)",
-        "expired": r"Expires (On|At)\s*:\s*(.+)",
-        "port": r"Port UDP\s*:\s*(\d+)"
-    }
+    # Write API Script - Copy from zivpn_api.py if available
+    local script_dir=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
+    local api_source="$script_dir/zivpn_api.py"
     
-    # Clean ANSI codes
-    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    clean_output = ansi_escape.sub('', output)
+    # Try to find zivpn_api.py in script directory, current directory, or workspace
+    if [ ! -f "$api_source" ]; then
+        api_source="zivpn_api.py"
+    fi
     
-    for key, pattern in patterns.items():
-        match = re.search(pattern, clean_output)
-        if match:
-            data[key] = match.group(1).strip()
-            
-    return data
-
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        parsed_path = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(parsed_path.query)
-        
-        # Auth Check
-        auth = params.get("auth", [""])[0]
-        real_key = "zivpn123"
-        if os.path.exists(API_KEY_FILE):
-            with open(API_KEY_FILE, "r") as f:
-                real_key = f.read().strip()
-            
-        if auth != real_key:
-            self.send_response(401)
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "message": "Unauthorized"}).encode())
-            return
-
-        path = parsed_path.path
-        response = {"status": "error", "message": "Invalid endpoint"}
-        
-        try:
-            if path == "/add":
-                user = params.get("user", [""])[0]
-                days = params.get("days", ["30"])[0]
-                if user:
-                    raw = run_zivpn_cmd(["add", user, days])
-                    data = parse_zivpn_output(raw)
-                    if data.get("username"):
-                        response = {"status": "success", "data": data}
-                    else:
-                        response = {"status": "error", "message": "Failed", "raw": raw}
-                else:
-                    response["message"] = "Missing user"
-
-            elif path == "/trial":
-                user = params.get("user", [""])[0]
-                mins = params.get("mins", ["30"])[0]
-                if user:
-                    raw = run_zivpn_cmd(["trial", user, mins])
-                    data = parse_zivpn_output(raw)
-                    if data.get("username"):
-                        response = {"status": "success", "data": data}
-                    else:
-                        response = {"status": "error", "message": "Failed", "raw": raw}
-                else:
-                    response["message"] = "Missing user"
-            
-            elif path == "/del":
-                user = params.get("user", [""])[0]
-                if user:
-                    # Force delete logic must be handled in zivpn.sh
-                    raw = run_zivpn_cmd(["del", user]) 
-                    response = {"status": "success", "raw": raw}
-                else:
-                    response["message"] = "Missing user"
-                    
-        except Exception as e:
-            response = {"status": "error", "message": str(e)}
-
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(response).encode())
-
-if __name__ == "__main__":
-    os.chdir("/tmp") 
-    with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
-        print(f"ZIVPN API serving at port {PORT}")
-        httpd.serve_forever()
-EOF_PY
+    if [ -f "$api_source" ]; then
+        cp "$api_source" "$api_file"
+        echo -e "${GREEN}API script copied from $api_source${NC}"
+    else
+        echo -e "${RED}Error: zivpn_api.py not found!${NC}"
+        echo -e "${YELLOW}Please ensure zivpn_api.py is in the same directory as zivpn.sh${NC}"
+        read -p "Press Enter to return..."
+        return
+    fi
 
     # Create Service
     cat <<EOF > $api_svc
