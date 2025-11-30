@@ -798,32 +798,17 @@ install_api() {
     fi
     local current_key=$(cat "$api_key_file")
     
-    # Write API Script - Copy from zivpn_api.py if available, or download from GitHub
-    local script_dir=$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")
-    local api_source="$script_dir/zivpn_api.py"
+    # Write API Script - Download from GitHub
     local api_url="https://raw.githubusercontent.com/zidnyzd/linux/main/zivpn_api.py"
     
-    # Try to find zivpn_api.py in script directory first
-    if [ ! -f "$api_source" ]; then
-        # Try current directory
-        api_source="zivpn_api.py"
-    fi
-    
-    if [ -f "$api_source" ]; then
-        # Use local file if found
-        cp "$api_source" "$api_file"
-        echo -e "${GREEN}API script copied from local file: $api_source${NC}"
+    echo -e "${YELLOW}Downloading zivpn_api.py from GitHub...${NC}"
+    if wget -q "$api_url" -O "$api_file"; then
+        echo -e "${GREEN}API script downloaded successfully from GitHub${NC}"
     else
-        # Download from GitHub if local file not found
-        echo -e "${YELLOW}Local zivpn_api.py not found. Downloading from GitHub...${NC}"
-        if wget -q "$api_url" -O "$api_file"; then
-            echo -e "${GREEN}API script downloaded successfully from GitHub${NC}"
-        else
-            echo -e "${RED}Error: Failed to download zivpn_api.py from GitHub!${NC}"
-            echo -e "${YELLOW}URL: $api_url${NC}"
-            read -p "Press Enter to return..."
-            return
-        fi
+        echo -e "${RED}Error: Failed to download zivpn_api.py from GitHub!${NC}"
+        echo -e "${YELLOW}URL: $api_url${NC}"
+        read -p "Press Enter to return..."
+        return
     fi
 
     # Create Service
