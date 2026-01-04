@@ -11,12 +11,14 @@ sudo rm -rf /var/lib/fail2ban
 sudo rm -rf /var/run/fail2ban
 sudo rm -f /var/log/fail2ban.log
 
-# Bersihkan rule iptables lama (hati-hati: ini flush semua chain filter)
-sudo iptables -D INPUT -j f2b-sshd 2>/dev/null
-sudo iptables -F f2b-sshd 2>/dev/null
-sudo iptables -X f2b-sshd 2>/dev/null
-sudo iptables -F || true
-sudo iptables -X || true
+# Bersihkan rule fail2ban lama saja (tanpa flush semua iptables)
+if sudo iptables -S INPUT 2>/dev/null | grep -q "\-j f2b-sshd"; then
+  sudo iptables -D INPUT -j f2b-sshd 2>/dev/null
+fi
+if sudo iptables -nL f2b-sshd >/dev/null 2>&1; then
+  sudo iptables -F f2b-sshd 2>/dev/null
+  sudo iptables -X f2b-sshd 2>/dev/null
+fi
 
 # ========== TELEGRAM DISABLED ==========
 TELEGRAM_ENABLED=false
