@@ -72,6 +72,12 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    rm -f repo.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
    ```
 
+12. **Quota Usage Reset**  
+   Reset penggunaan kuota
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
+   ```
+
 ## 📋 Overview
 
 Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dirancang untuk memudahkan pengelolaan server, meningkatkan keamanan, dan mengoptimalkan performa sistem.
