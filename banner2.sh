@@ -28,11 +28,11 @@ cat << 'EOF' > /etc/fightertunnel.txt
   <br> 
   BOT Online 24/7<br>
   <br>
-  Tembak Paket XL di Web <br>https://panel.zidstore.net<br>
+  Tembak Paket Data di Web <br>https://panel.zidstore.net<br>
   Top Up Instant 24/7<br>
   <br>
   Paket XL yang Tersedia di Web :<br>
-  XL Circle Full Reguler, XL Akrab Anggota, XL Xtra Unlimited 10 Hari, XL Bebas Puas 90 GB & 234 GB Resmi, Xtra Combo VIP Double YouTube, XL BIZ Lite, XL BIZ E-Commerce, XL XUT TikTok & YouTube, Masa Aktif 1 Tahun, dan banyak lagi<br>
+  XL Edukasi 15GB, 8K-an!, XL Conference 15GB, 11K-an!, XL Akrab Kuota s/d 163GB dan Bisa untuk AXIS, XL Circle Kuota s/d 84GB, XL Xtra Combo Plus 5GB / XCP 0KB + Bonus Kuota / Addon 10-15GB, Masa Aktif All Operator, AXIS Data, By.U Data, TRI & INDOSAT Data & HiFi, Kuota s/d 500GB, dan banyak lagi<br>
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
