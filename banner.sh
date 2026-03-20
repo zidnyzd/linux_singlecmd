@@ -36,7 +36,6 @@ cat << 'EOF' > /etc/fightertunnel.txt
   <br>
   <b>OUR SERVICES:</b><br>
   VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
-  VPS Digital Ocean: https://t.me/zidstorevpn/17<br>
   <br><b>CONTACT US:</b><br>
   Telegram: https://t.me/storezid2<br>
   Telegram Channel: https://t.me/zidstorevpn<br>
