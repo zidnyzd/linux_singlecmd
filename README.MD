@@ -6,10 +6,10 @@
 
 Urutan prioritas utama untuk manajemen dan perbaikan server:
 
-1. **Fail2Ban Installation**  
-   Blokir serangan brute force SSH  
+1. **Repo**  
+   Update API
    ```bash
-   rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+   rm -f repo.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
    ```
 
 2. **Kernel Management Tool**  
@@ -18,64 +18,70 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_kernel.sh && chmod +x fix_kernel.sh && ./fix_kernel.sh
    ```
 
-3. **Gotop Installation**  
-   System monitor interaktif  
-   ```bash
-   wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
-   ```
-
-4. **XRAY Fix**  
+3. **XRAY Fix**  
    Perbaikan layanan XRAY  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
    ```
 
-5. **Haproxy Fix**  
+4. **Haproxy Fix**  
    Perbaikan layanan Haproxy  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_haproxy.sh && chmod +x fix_haproxy.sh && ./fix_haproxy.sh
    ```
 
-6. **WebSocket Fix**  
+5. **WebSocket Fix**  
    Perbaikan layanan WebSocket & Auto Restart  
    ```bash
    rm -f fix_ws.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
    ```
 
-7. **Install Dropbear 2018**  
+6. **Install Dropbear 2018**  
    Downgrade Dropbear
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_dropbear2018.sh && chmod +x install_dropbear2018.sh && ./install_dropbear2018.sh
    ```
 
-8. **FIX DPKG Debian Exim**  
+7. **FIX DPKG Debian Exim**  
    FIX APT BROKEN 
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/errordpkg.sh && chmod +x errordpkg.sh && ./errordpkg.sh
    ```
 
-9. **SSH Banner Update**  
+8. **SSH Banner Update**  
    Update banner SSH  
    ```bash
    rm -f banner.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
    ```
 
-10. **API**  
+9. **API**  
    Update API
    ```bash
    rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh && chmod +x api.sh && ./api.sh
    ```
 
-11. **Repo**  
-   Update API
-   ```bash
-   rm -f repo.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
-   ```
-
-12. **Quota Usage Reset**  
+10. **Quota Usage Reset**  
    Reset penggunaan kuota
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
+   ```
+
+11. **Disable DNSTT Auto Reboot**  
+   Reset penggunaan kuota
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
+   ```
+
+12. **Fail2Ban Installation**  
+   Blokir serangan brute force SSH  
+   ```bash
+   rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
+   ```
+
+13. **Gotop Installation**  
+   System monitor interaktif  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
    ```
 
 ## 📋 Overview

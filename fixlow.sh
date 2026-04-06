@@ -19,11 +19,10 @@ echo "Done Remove DNSTT Step 2"
 echo "DNSTT CLEARED"
 sleep 2
 
-# Disable OpenVpn
-systemctl disable openvpn
+# Disable Auto Reboot
+rm /etc/cron.d/daily_reboot
 sleep 2
-systemctl stop openvpn
-sleep 2
-rm /lib/systemd/system/openvpn.service
-echo "Removed OpenVPN Server"
+systemctl restart cron
+echo "Done Remove Auto Reboot"
+
 echo "Script Done, Server now should be more lighter"
