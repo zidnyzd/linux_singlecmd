@@ -19,6 +19,7 @@ maxretry = 1
 findtime = 600
 bantime = 1h
 backend = auto
+logpath = /var/log/auth.log
 EOF
 
 echo "==> Test fail2ban config"
@@ -26,6 +27,14 @@ fail2ban-client -t || { echo "Config test failed"; exit 1; }
 
 echo "==> Restart fail2ban"
 systemctl restart fail2ban
+
+if systemctl is-active --quiet fail2ban; then
+    echo "Fail2ban restarted successfully"
+else
+    echo "Fail2ban failed to restart. Checking status..."
+    systemctl status fail2ban
+    exit 1
+fi
 
 echo "==> Fail2ban status (sshd)"
 fail2ban-client status sshd || true
