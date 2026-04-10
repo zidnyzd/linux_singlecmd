@@ -1,15 +1,19 @@
 #!/bin/bash
 set -e
 
-echo "==> Install fail2ban"
+echo "==> Updating package list"
 apt update
+
+echo "==> Installing fail2ban"
 apt install -y fail2ban
 
-echo "==> Enable & start fail2ban"
+echo "==> Enabling fail2ban service"
 systemctl enable fail2ban
+
+echo "==> Starting fail2ban service"
 systemctl start fail2ban
 
-echo "==> Create aggressive sshd override (1x fail = ban)"
+echo "==> Creating aggressive SSH jail configuration"
 mkdir -p /etc/fail2ban/jail.d
 
 cat > /etc/fail2ban/jail.d/sshd-aggressive.conf << 'EOF'
@@ -21,29 +25,33 @@ bantime = 1h
 backend = systemd
 EOF
 
-echo "==> Test fail2ban config"
-fail2ban-client -t || { echo "Config test failed"; exit 1; }
+echo "==> Testing fail2ban configuration"
+if ! fail2ban-client -t > /dev/null 2>&1; then
+    echo "ERROR: Fail2ban configuration test failed"
+    fail2ban-client -t
+    exit 1
+fi
 
-echo "==> Restart fail2ban"
+echo "==> Restarting fail2ban service"
 systemctl restart fail2ban
 
-if systemctl is-active --quiet fail2ban; then
-    echo "Fail2ban restarted successfully"
-else
-    echo "Fail2ban failed to restart. Checking status..."
+echo "==> Verifying fail2ban is running"
+if ! systemctl is-active --quiet fail2ban; then
+    echo "ERROR: Fail2ban service failed to start"
     systemctl status fail2ban
     exit 1
 fi
 
-echo "==> Fail2ban status (sshd)"
-fail2ban-client status sshd || true
+echo "==> Checking fail2ban SSH jail status"
+fail2ban-client status sshd || echo "Warning: Could not get jail status"
 
 echo
-echo "DONE ✅"
-echo "Info:"
-echo "- 1x SSH login failed = immediate ban"
-echo "- Existing fail2ban config untouched"
-echo "- Safe for tunnel VPS"
+echo "✅ Fail2ban setup completed successfully!"
 echo
-echo "TIP (optional): whitelist your IP"
+echo "Configuration details:"
+echo "- SSH jail: 1 failed attempt = 1 hour ban"
+echo "- Monitoring: systemd journal"
+echo "- Existing configurations preserved"
+echo
+echo "Optional: Whitelist your IP address"
 echo "fail2ban-client set sshd addignoreip YOUR_IP"
