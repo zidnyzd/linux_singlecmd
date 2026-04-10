@@ -18,8 +18,7 @@ enabled = true
 maxretry = 1
 findtime = 600
 bantime = 1h
-backend = auto
-logpath = /var/log/auth.log
+backend = systemd
 EOF
 
 echo "==> Test fail2ban config"
