@@ -18,8 +18,11 @@ enabled = true
 maxretry = 1
 findtime = 600
 bantime = 1h
-backend = systemd
+backend = auto
 EOF
+
+echo "==> Test fail2ban config"
+fail2ban-client -t || { echo "Config test failed"; exit 1; }
 
 echo "==> Restart fail2ban"
 systemctl restart fail2ban
