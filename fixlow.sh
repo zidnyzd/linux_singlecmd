@@ -3,7 +3,7 @@
 # Disable DNSTT Client
 systemctl disable dnstt-client
 sleep 2
-systemctl stop client
+systemctl stop dnstt-client
 sleep 2
 rm /etc/systemd/system/dnstt-client.service
 echo "Done Remove DNSTT Step 1"
