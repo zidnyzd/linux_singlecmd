@@ -139,6 +139,11 @@ Koleksi script otomatis untuk manajemen server Linux Anda. Script-script ini dir
   wget https://raw.githubusercontent.com/zidnyzd/linux/main/install-badvpn.sh && chmod +x install-badvpn.sh && ./install-badvpn.sh
   ```
 
+  **Rollback UDPGW:**
+  ```bash
+  wget https://raw.githubusercontent.com/zidnyzd/linux/main/remove-badvpn.sh && chmod +x remove-badvpn.sh && ./remove-badvpn.sh
+  ```
+
   **Fitur Utama:**
   1. **Shortcut Command**: Cukup ketik `zivpn` di terminal setelah install.
   2. **Menu Interaktif**: Semua fitur bisa diakses lewat menu.
