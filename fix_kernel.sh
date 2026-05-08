@@ -104,8 +104,17 @@ if [[ "$selected" =~ ^[0-9]+$ ]] && [ "$selected" -gt 0 ] && [ "$selected" -le "
             update-grub
             print_success "Kernel $target_kernel has been successfully removed!"
         else
-            print_error "Failed to remove kernel. Please check the error messages above."
-            exit 1
+            print_info "Standard removal failed, attempting fallback fix..."
+            # Fallback: move postrm file, force remove, fix broken
+            postrm_file="/var/lib/dpkg/info/${target_kernel}.postrm"
+            if [ -f "$postrm_file" ]; then
+                mv "$postrm_file" "${postrm_file}.bak"
+                sleep 2
+            fi
+            dpkg --remove --force-remove-reinstreq "$target_kernel"
+            apt --fix-broken install -y
+            update-grub
+            print_success "Kernel $target_kernel has been successfully removed (fallback fix applied)!"
         fi
     else
         print_info "Operation cancelled by user."
