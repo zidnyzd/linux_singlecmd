@@ -72,13 +72,19 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
    ```
 
-12. **Fail2Ban Installation**  
+12. **Hostname & Expired Auto Shutdown**  
+   Atur hostname VPS dan jadwalkan auto-shutdown saat tanggal expired (format DD-MM-YYYY). MOTD login menampilkan sisa hari aktif agar user tahu kapan VPS expired.
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/hostname_expire.sh && chmod +x hostname_expire.sh && ./hostname_expire.sh
+   ```
+
+13. **Fail2Ban Installation**  
    Blokir serangan brute force SSH  
    ```bash
    rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
    ```
 
-13. **Gotop Installation**  
+14. **Gotop Installation**  
    System monitor interaktif  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
