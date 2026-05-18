@@ -77,9 +77,14 @@ EOSCRIPT
 }
 
 # --- Tulis MOTD penampil sisa hari ---
+# Strategi anti-duplikasi:
+#   - Jika sistem punya update-motd.d (Debian/Ubuntu), pasang HANYA di sana
+#     (akan dipanggil oleh pam_motd saat SSH login).
+#   - Jika tidak punya, baru pakai /etc/profile.d/ sebagai fallback.
+#   - Selalu bersihkan baris /etc/profile peninggalan versi lama.
 write_motd_script() {
-    mkdir -p /etc/update-motd.d 2>/dev/null
-    cat > "$MOTD_FILE" <<'EOMOTD'
+    local body
+    body=$(cat <<'EOMOTD'
 #!/bin/bash
 CONF="/etc/vps_expiry.conf"
 [ -f "$CONF" ] || exit 0
@@ -106,11 +111,21 @@ fi
 echo "============================================================"
 echo ""
 EOMOTD
-    chmod 755 "$MOTD_FILE"
+)
 
-    # Pastikan dipanggil saat login (untuk distro tanpa update-motd.d)
-    if ! grep -q "$MOTD_FILE" /etc/profile 2>/dev/null; then
-        echo "[ -x \"$MOTD_FILE\" ] && \"$MOTD_FILE\"" >> /etc/profile
+    # Bersihkan sisa instalasi lama (kalau ada) supaya tidak dobel
+    sed -i "\|$MOTD_FILE|d" /etc/profile 2>/dev/null
+    rm -f /etc/profile.d/zz-vps-expiry.sh
+
+    if [ -d /etc/update-motd.d ]; then
+        # Debian/Ubuntu: cukup di update-motd.d (pam_motd akan menjalankannya)
+        echo "$body" > "$MOTD_FILE"
+        chmod 755 "$MOTD_FILE"
+    else
+        # Distro tanpa update-motd.d -> pakai /etc/profile.d sebagai fallback
+        echo "$body" > /etc/profile.d/zz-vps-expiry.sh
+        chmod 755 /etc/profile.d/zz-vps-expiry.sh
+        rm -f "$MOTD_FILE"
     fi
 }
 
@@ -223,7 +238,7 @@ remove_expiry() {
     echo -e "${YELLOW}Lanjutkan? (y/n):${NC} "
     read -r c
     [[ "$c" != "y" && "$c" != "Y" ]] && { echo "Dibatalkan."; return; }
-    rm -f "$EXPIRY_CONF" "$EXPIRY_CHECK" "$CRON_FILE" "$MOTD_FILE"
+    rm -f "$EXPIRY_CONF" "$EXPIRY_CHECK" "$CRON_FILE" "$MOTD_FILE" /etc/profile.d/zz-vps-expiry.sh
     sed -i "\|$MOTD_FILE|d" /etc/profile 2>/dev/null
     systemctl reload cron 2>/dev/null || systemctl reload crond 2>/dev/null || true
     echo -e "${GREEN}Jadwal expired dihapus.${NC}"
