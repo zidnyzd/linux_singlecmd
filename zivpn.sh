@@ -21,6 +21,33 @@ NC='\033[0m'
 mkdir -p $DIR
 if [[ ! -f "$USER_DB" ]]; then touch "$USER_DB"; fi
 
+# Trim leading/trailing whitespace from a string (including CR from Windows paste)
+trim() {
+    local s="$1"
+    # Strip CR
+    s="${s%$'\r'}"
+    # Strip leading whitespace
+    s="${s#"${s%%[![:space:]]*}"}"
+    # Strip trailing whitespace
+    s="${s%"${s##*[![:space:]]}"}"
+    printf '%s' "$s"
+}
+
+# Cross-process serialization for $USER_DB writes (best-effort).
+# Falls back to no-op if `flock` is not available.
+db_lock() {
+    if command -v flock >/dev/null 2>&1; then
+        exec 9>>"$USER_DB.lock"
+        flock 9
+    fi
+}
+db_unlock() {
+    if command -v flock >/dev/null 2>&1; then
+        flock -u 9 2>/dev/null
+        exec 9>&-
+    fi
+}
+
 # --- Core Logic: Sync DB to Config ---
 update_config() {
     # Ambil semua password dari DB yang belum expired
@@ -31,6 +58,10 @@ update_config() {
     # Gunakan variabel lokal loop yang unik atau declare local
     local l_user l_pass l_exp
     while IFS=':' read -r l_user l_pass l_exp; do
+        # Trim whitespace agar entry hasil paste tetap dianggap valid
+        l_user=$(trim "$l_user")
+        l_pass=$(trim "$l_pass")
+        l_exp=$(trim "$l_exp")
         # Skip baris kosong atau format salah
         if [[ -z "$l_user" || -z "$l_pass" || -z "$l_exp" ]]; then continue; fi
         
@@ -38,6 +69,20 @@ update_config() {
             passwords+=("$l_pass")
         fi
     done < "$USER_DB"
+
+    # Dedup passwords (preserve order) untuk menghindari entry duplikat di config
+    if [ ${#passwords[@]} -gt 0 ]; then
+        local _seen=""
+        local _deduped=()
+        local _p
+        for _p in "${passwords[@]}"; do
+            case "|$_seen|" in
+                *"|$_p|"*) ;;
+                *) _deduped+=("$_p"); _seen="$_seen|$_p" ;;
+            esac
+        done
+        passwords=("${_deduped[@]}")
+    fi
 
     # Jika tidak ada user, gunakan default 'zi' agar service tidak error
     if [ ${#passwords[@]} -eq 0 ]; then
@@ -84,7 +129,33 @@ install_zivpn() {
     apt-get update && apt-get upgrade -y
     apt-get install iptables ufw iproute2 -y
 
+    # Stop semua service terkait dulu untuk hindari race condition di DB
     systemctl stop zivpn.service > /dev/null 2>&1
+    systemctl stop zivpn-api > /dev/null 2>&1
+
+    # Bersihkan cron lama (semua varian path) untuk mencegah duplikasi
+    if command -v crontab >/dev/null 2>&1; then
+        crontab -l 2>/dev/null \
+            | grep -v -E "(zivpn\.sh|/usr/local/bin/zivpn|/usr/bin/zivpn)( |$)" \
+            > /tmp/cron_zivpn_clean
+        crontab /tmp/cron_zivpn_clean 2>/dev/null
+        rm -f /tmp/cron_zivpn_clean
+    fi
+
+    # Backup DB user lama (jika ada) sebelum reinstall, lalu dedup baris identik
+    if [ -s "$USER_DB" ]; then
+        cp "$USER_DB" "$DIR/passwd.bak.$(date +%Y%m%d_%H%M%S)" 2>/dev/null
+
+        # Hapus baris kosong & dedup berdasarkan baris persis
+        # (gunakan awk agar urutan tetap stabil)
+        awk 'NF && !seen[$0]++' "$USER_DB" > "$USER_DB.dedup"
+        mv "$USER_DB.dedup" "$USER_DB"
+
+        # Jika user yang sama muncul di dua baris (password/expiry beda),
+        # ambil baris pertama saja agar tidak ada akun ganda di config.
+        awk -F: 'NF>=3 && !seen[$1]++' "$USER_DB" > "$USER_DB.dedup"
+        mv "$USER_DB.dedup" "$USER_DB"
+    fi
 
     echo -e "${GREEN}Downloading UDP Service...${NC}"
     wget https://github.com/zahidbd2/udp-zivpn/releases/download/udp-zivpn_1.4.9/udp-zivpn-linux-amd64 -O $BIN > /dev/null 2>&1
@@ -233,8 +304,10 @@ uninstall_zivpn() {
     
     rm -rf $DIR
     
-    # Remove cron
-    crontab -l 2>/dev/null | grep -v "zivpn.sh" > /tmp/cron_zivpn
+    # Remove cron - hapus semua varian path zivpn
+    crontab -l 2>/dev/null \
+        | grep -v -E "(zivpn\.sh|/usr/local/bin/zivpn|/usr/bin/zivpn)( |$)" \
+        > /tmp/cron_zivpn
     crontab /tmp/cron_zivpn
     rm -f /tmp/cron_zivpn
     
@@ -280,6 +353,11 @@ add_user() {
         read -p "Days     : " days
     fi
 
+    # Trim whitespace/CR (sering muncul saat paste dari WhatsApp/Telegram)
+    user=$(trim "$user")
+    pass=$(trim "$pass")
+    days=$(trim "$days")
+
     # Validasi input
     if [[ -z "$user" || -z "$days" ]]; then
         echo -e "${RED}Error: Username and Days are required.${NC}"
@@ -304,8 +382,16 @@ add_user() {
 
     local exp_date=$(date -d "+$days days" +%s)
 
+    # Lock + recheck untuk hindari race jika cron `xp` berjalan bersamaan
+    db_lock
+    if grep -q "^$user:" "$USER_DB"; then
+        db_unlock
+        echo -e "${RED}User $user already exists!${NC}"
+        return
+    fi
     # Simpan ke DB
     echo "$user:$pass:$exp_date" >> "$USER_DB"
+    db_unlock
     
     # Update Config ZIVPN
     update_config
@@ -354,6 +440,10 @@ add_trial() {
         read -p "Minutes  : " mins
     fi
 
+    user=$(trim "$user")
+    mins=$(trim "$mins")
+    mins=$(echo "$mins" | tr -dc '0-9')
+
     if [[ -z "$user" || -z "$mins" ]]; then
         echo -e "${RED}Error: Username and Minutes are required.${NC}"
         return
@@ -368,7 +458,14 @@ add_trial() {
     local now=$(date +%s)
     local exp_date=$((now + (mins * 60))) # Kalkulasi menit ke detik
 
+    db_lock
+    if grep -q "^$user:" "$USER_DB"; then
+        db_unlock
+        echo -e "${RED}User $user already exists!${NC}"
+        return
+    fi
     echo "$user:$pass:$exp_date" >> "$USER_DB"
+    db_unlock
     update_config
     
     local domain=$(cat /etc/zivpn/domain 2>/dev/null || curl -s ifconfig.me)
@@ -389,6 +486,7 @@ add_trial() {
 
 del_user() {
     local user=$1
+    user=$(trim "$user")
     
     # Jika argumen kosong, tampilkan menu pilih user
     if [[ -z "$user" ]]; then
@@ -433,7 +531,9 @@ del_user() {
 
     # Jika Mode API, skip konfirmasi
     if [[ "$ZIVPN_API_MODE" == "1" ]]; then
+        db_lock
         sed -i "/^$user:/d" "$USER_DB"
+        db_unlock
         update_config
         echo "User $user deleted"
         return
@@ -441,7 +541,9 @@ del_user() {
 
     read -p "Are you sure you want to delete '$user'? (y/n): " confirm
     if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+        db_lock
         sed -i "/^$user:/d" "$USER_DB"
+        db_unlock
         update_config
         echo -e "${GREEN}User $user deleted!${NC}"
     else
@@ -452,6 +554,8 @@ del_user() {
 renew_user() {
     local user=$1
     local days=$2
+    user=$(trim "$user")
+    days=$(trim "$days")
     
     # Jika argumen kosong, tampilkan menu pilih user
     if [[ -z "$user" ]]; then
@@ -529,6 +633,7 @@ renew_user() {
 
     # Gunakan temp file dan loop untuk update
     local temp_db="$USER_DB.tmp"
+    db_lock
     rm -f "$temp_db"
     local l_user l_pass l_exp
     while IFS=':' read -r l_user l_pass l_exp; do
@@ -539,6 +644,7 @@ renew_user() {
         fi
     done < "$USER_DB"
     mv "$temp_db" "$USER_DB"
+    db_unlock
     
     update_config
 
@@ -565,6 +671,9 @@ change_password() {
         read -p "New Password : " new_pass
     fi
 
+    user=$(trim "$user")
+    new_pass=$(trim "$new_pass")
+
     if [[ -z "$user" || -z "$new_pass" ]]; then
         echo -e "${RED}Error: Username and Password are required.${NC}"
         return
@@ -576,6 +685,7 @@ change_password() {
     fi
 
     local temp_db="$USER_DB.tmp"
+    db_lock
     rm -f "$temp_db"
     local l_user l_pass l_exp
     while IFS=':' read -r l_user l_pass l_exp; do
@@ -587,6 +697,7 @@ change_password() {
     done < "$USER_DB"
 
     mv "$temp_db" "$USER_DB"
+    db_unlock
     update_config
 
     if [[ "$ZIVPN_API_MODE" == "1" ]]; then
@@ -901,34 +1012,71 @@ import subprocess
 import json
 import re
 import os
+import socket
+from datetime import datetime
 
 PORT = 9999
-API_KEY_FILE = "/etc/zivpn/api_key"
+AUTH_KEY = "zivpn123" # Default key, sebaiknya diubah
+
+# IP Whitelist - hanya IP ini yang diizinkan mengakses API
+# Bisa dikonfigurasi via file /etc/zivpn/ip_whitelist (satu IP per baris)
+# Atau gunakan default list di bawah
+DEFAULT_WHITELIST_IPS = [
+    # Tambahkan IP yang diizinkan di sini, contoh:
+    # "127.0.0.1",
+    # "192.168.1.100",
+]
+
+def get_whitelist_ips():
+    """Mengambil daftar IP whitelist dari file atau default"""
+    whitelist_file = "/etc/zivpn/ip_whitelist"
+    if os.path.exists(whitelist_file):
+        try:
+            with open(whitelist_file, "r") as f:
+                ips = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
+                return ips
+        except Exception as e:
+            print(f"Error reading whitelist file: {e}")
+            return DEFAULT_WHITELIST_IPS
+    return DEFAULT_WHITELIST_IPS
+
+def is_ip_whitelisted(client_ip, whitelist):
+    """Cek apakah IP client ada di whitelist"""
+    if not whitelist:  # Jika whitelist kosong, izinkan semua (backward compatibility)
+        return True
+    return client_ip in whitelist
 
 def run_zivpn_cmd(args):
-    # Add --api flag to bypass interactivity if supported, or rely on args presence
+    # Menjalankan zivpn cli dengan API mode
     cmd = ["/usr/local/bin/zivpn"] + args
     try:
-        # Set environment var to tell zivpn script to be quiet/non-interactive
         env = os.environ.copy()
-        env["ZIVPN_API_MODE"] = "1" 
+        env["ZIVPN_API_MODE"] = "1"
         result = subprocess.run(cmd, capture_output=True, text=True, env=env)
         return result.stdout
     except Exception as e:
         return str(e)
 
 def parse_zivpn_output(output):
+    # Parsing output zivpn yang "cantik" menjadi data terstruktur
+    # Contoh output:
+    # Domain : example.com
+    # Username : user
+    # Password : user
+    # Expires On : 26-11-2025 14:30
+    
     data = {}
+    
     # Regex patterns
     patterns = {
-        "domain": r"Domain\s*:\s*(.+)", 
+        "domain": r"Domain\s*:\s*(.+)", # Mengambil teks setelah "Domain :" tapi mengabaikan kode warna ANSI
         "username": r"Username\s*:\s*(.+)",
         "password": r"Password\s*:\s*(.+)",
-        "expired": r"Expires (On|At)\s*:\s*(.+)",
+        "expired": r"Expires (?:On|At)\s*:\s*(.+)",
         "port": r"Port UDP\s*:\s*(\d+)"
     }
     
-    # Clean ANSI codes
+    # Bersihkan kode warna ANSI
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     clean_output = ansi_escape.sub('', output)
     
@@ -936,22 +1084,126 @@ def parse_zivpn_output(output):
         match = re.search(pattern, clean_output)
         if match:
             data[key] = match.group(1).strip()
+    
+    # Fallback: Parse interactive output format (e.g., "User jjj renewed until Mon Dec  1 11:38:34 AM WIB 2025!")
+    if not data.get("username"):
+        # Try to extract from "User X renewed until DATE"
+        renew_match = re.search(r'User\s+(\w+)\s+renewed\s+until\s+(.+)!', clean_output)
+        if renew_match:
+            data["username"] = renew_match.group(1).strip()
+            # Try to parse the date and convert to DD-MM-YYYY HH:MM format
+            date_str = renew_match.group(2).strip()
+            try:
+                # Try common date formats
+                for fmt in ["%a %b %d %I:%M:%S %p %Z %Y", "%a %b  %d %I:%M:%S %p %Z %Y", "%a %b %d %H:%M:%S %Z %Y"]:
+                    try:
+                        dt = datetime.strptime(date_str, fmt)
+                        data["expired"] = dt.strftime("%d-%m-%Y %H:%M")
+                        break
+                    except:
+                        continue
+                if "expired" not in data:
+                    data["expired"] = date_str  # Fallback: use original string
+            except:
+                data["expired"] = date_str  # Fallback: use original string
+            
+            # Get domain from file if not in output
+            if not data.get("domain"):
+                try:
+                    if os.path.exists("/etc/zivpn/domain"):
+                        with open("/etc/zivpn/domain", "r") as f:
+                            data["domain"] = f.read().strip()
+                    else:
+                        # Fallback to IP
+                        data["domain"] = socket.gethostbyname(socket.gethostname())
+                except:
+                    data["domain"] = "unknown"
             
     return data
 
 class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def check_ip_whitelist(self):
+        """Cek IP whitelist - dipanggil sebelum memproses request apapun"""
+        client_ip = self.client_address[0]
+        whitelist = get_whitelist_ips()
+        
+        if not is_ip_whitelisted(client_ip, whitelist):
+            # Log blocked IP attempt
+            print(f"[BLOCKED] {client_ip} - {datetime.now().strftime('%d/%b/%Y %H:%M:%S')} - IP not whitelisted")
+            try:
+                self.send_response(403)
+                self.send_header("Content-type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "error", 
+                    "message": "Forbidden: IP not whitelisted"
+                }).encode())
+            except:
+                pass  # Jika sudah error, tutup saja koneksi
+            return False
+        return True
+    
+    def handle(self):
+        """Override handle untuk cek IP sebelum parsing request"""
+        # Cek IP whitelist sebelum memproses request apapun
+        if not self.check_ip_whitelist():
+            return  # Tutup koneksi jika IP tidak di-whitelist
+        
+        # Lanjutkan dengan handle normal
+        try:
+            super().handle()
+        except Exception as e:
+            # Tangkap error parsing request (seperti request aneh TLS handshake)
+            client_ip = self.client_address[0]
+            print(f"[ERROR] {client_ip} - {datetime.now().strftime('%d/%b/%Y %H:%M:%S')} - Request parsing error: {str(e)[:100]}")
+            try:
+                self.send_response(400)
+                self.end_headers()
+            except:
+                pass
+    
+    def log_error(self, format, *args):
+        """Override untuk log error dengan IP address"""
+        client_ip = self.client_address[0] if hasattr(self, 'client_address') else 'unknown'
+        whitelist = get_whitelist_ips()
+        
+        # Jika IP tidak di whitelist, log sebagai blocked attempt
+        if whitelist and not is_ip_whitelisted(client_ip, whitelist):
+            print(f"[BLOCKED] {client_ip} - {datetime.now().strftime('%d/%b/%Y %H:%M:%S')} - Invalid request from non-whitelisted IP")
+        else:
+            # Log error normal
+            message = format % args
+            print(f"[ERROR] {client_ip} - {datetime.now().strftime('%d/%b/%Y %H:%M:%S')} - {message}")
+    
+    def log_message(self, format, *args):
+        """Override untuk log message dengan IP address - format mirip default Python HTTP server"""
+        client_ip = self.client_address[0] if hasattr(self, 'client_address') else 'unknown'
+        message = format % args
+        # Log selalu muncul karena IP sudah di-filter di handle() sebelumnya
+        # Format: IP - - [DATE] "MESSAGE"
+        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+        print(f"{client_ip} - - [{timestamp}] {message}")
+    
     def do_GET(self):
+        # IP Whitelist Check - double check (seharusnya sudah dicek di handle(), tapi untuk safety)
+        if not self.check_ip_whitelist():
+            return
+        
         parsed_path = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed_path.query)
         
-        # Auth Check
+        # Simple Auth
         auth = params.get("auth", [""])[0]
-        real_key = "zivpn123"
-        if os.path.exists(API_KEY_FILE):
-            with open(API_KEY_FILE, "r") as f:
+        if os.path.exists("/etc/zivpn/api_key"):
+            with open("/etc/zivpn/api_key", "r") as f:
                 real_key = f.read().strip()
+        else:
+            real_key = AUTH_KEY
             
         if auth != real_key:
+            client_ip = self.client_address[0]
+            timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+            print(f"{client_ip} - - [{timestamp}] [AUTH] Unauthorized access attempt")
             self.send_response(401)
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": "Unauthorized"}).encode())
@@ -960,19 +1212,35 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = parsed_path.path
         response = {"status": "error", "message": "Invalid endpoint"}
         
+        # Log invalid endpoint
+        if path not in ["/add", "/trial", "/del", "/renew"]:
+            client_ip = self.client_address[0]
+            timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+            print(f"{client_ip} - - [{timestamp}] [INVALID] Invalid endpoint accessed: {path}")
+        
         try:
             if path == "/add":
                 user = params.get("user", [""])[0]
+                password = params.get("password", [user])[0]
                 days = params.get("days", ["30"])[0]
                 if user:
-                    raw = run_zivpn_cmd(["add", user, days])
+                    # Gunakan mode quiet/api jika nanti kita implementasikan, 
+                    # atau parsing output standar
+                    raw = run_zivpn_cmd(["add", user, password, days])
                     data = parse_zivpn_output(raw)
                     if data.get("username"):
                         response = {"status": "success", "data": data}
+                        # Log operasi sukses
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [ADD] User '{user}' created successfully, expires: {data.get('expired', 'unknown')}")
                     else:
-                        response = {"status": "error", "message": "Failed", "raw": raw}
+                        response = {"status": "error", "message": "Failed to create user", "raw": raw}
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [ADD] Failed to create user '{user}': {raw[:100]}")
                 else:
-                    response["message"] = "Missing user"
+                    response["message"] = "Missing user parameter"
 
             elif path == "/trial":
                 user = params.get("user", [""])[0]
@@ -982,19 +1250,61 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
                     data = parse_zivpn_output(raw)
                     if data.get("username"):
                         response = {"status": "success", "data": data}
+                        # Log operasi sukses
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [TRIAL] User '{user}' trial created for {mins} minutes, expires: {data.get('expired', 'unknown')}")
                     else:
-                        response = {"status": "error", "message": "Failed", "raw": raw}
+                        response = {"status": "error", "message": "Failed to create trial", "raw": raw}
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [TRIAL] Failed to create trial for user '{user}': {raw[:100]}")
                 else:
-                    response["message"] = "Missing user"
+                    response["message"] = "Missing user parameter"
             
             elif path == "/del":
                 user = params.get("user", [""])[0]
                 if user:
-                    # Force delete logic must be handled in zivpn.sh
-                    raw = run_zivpn_cmd(["del", user]) 
-                    response = {"status": "success", "raw": raw}
+                    # Perlu bypass konfirmasi (y/n) di script zivpn
+                    # Kita perlu update zivpn.sh agar support 'force delete'
+                    # Untuk sekarang kita coba pipe 'y'
+                    # Tapi subprocess.run sulit pipe stdin langsung tanpa input=...
+                    
+                    # Workaround: panggil fungsi del_user langsung via sed/modifikasi zivpn.sh
+                    # Atau lebih baik: update zivpn.sh agar ada flag --quiet atau force
+                    
+                    # Asumsi zivpn.sh kita update nanti untuk support 'del_api'
+                    raw = run_zivpn_cmd(["del_api", user]) 
+                    client_ip = self.client_address[0]
+                    timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                    if "deleted" in raw or "not found" in raw:
+                         response = {"status": "success", "message": f"User {user} processed"}
+                         print(f"{client_ip} - - [{timestamp}] [DEL] User '{user}' deleted successfully")
+                    else:
+                         response = {"status": "error", "raw": raw}
+                         print(f"{client_ip} - - [{timestamp}] [DEL] Failed to delete user '{user}': {raw[:100]}")
                 else:
-                    response["message"] = "Missing user"
+                    response["message"] = "Missing user parameter"
+
+            elif path == "/renew":
+                user = params.get("user", [""])[0]
+                days = params.get("days", ["30"])[0]
+                if user:
+                    raw = run_zivpn_cmd(["renew", user, days])
+                    data = parse_zivpn_output(raw)
+                    if data.get("username"):
+                        response = {"status": "success", "data": data}
+                        # Log operasi sukses
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [RENEW] User '{user}' renewed for {days} days, new expiry: {data.get('expired', 'unknown')}")
+                    else:
+                        response = {"status": "error", "message": "Failed to renew", "raw": raw}
+                        client_ip = self.client_address[0]
+                        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+                        print(f"{client_ip} - - [{timestamp}] [RENEW] Failed to renew user '{user}': {raw[:100]}")
+                else:
+                    response["message"] = "Missing user parameter"
                     
         except Exception as e:
             response = {"status": "error", "message": str(e)}
@@ -1005,7 +1315,17 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode())
 
 if __name__ == "__main__":
+    # Set working dir to /tmp to avoid exposing root files if SimpleHTTP vulnerability exists
+    # Though we override do_GET, safer is better.
     os.chdir("/tmp") 
+    
+    # Load dan tampilkan whitelist IPs
+    whitelist = get_whitelist_ips()
+    if whitelist:
+        print(f"IP Whitelist aktif: {', '.join(whitelist)}")
+    else:
+        print("WARNING: IP Whitelist kosong - semua IP diizinkan (tidak aman untuk production!)")
+    
     with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
         print(f"ZIVPN API serving at port {PORT}")
         httpd.serve_forever()
@@ -1040,9 +1360,12 @@ EOF
     echo -e "Port    : 9999"
     echo -e "Auth Key: ${YELLOW}$current_key${NC}"
     echo -e "Endpoints:"
-    echo -e "  /add?user=...&days=...&auth=KEY"
+    echo -e "  /add?user=...&password=...&days=...&auth=KEY"
     echo -e "  /trial?user=...&mins=...&auth=KEY"
     echo -e "  /del?user=...&auth=KEY"
+    echo -e "  /renew?user=...&days=...&auth=KEY"
+    echo -e ""
+    echo -e "${YELLOW}Tip:${NC} Untuk membatasi akses, isi /etc/zivpn/ip_whitelist (1 IP per baris)"
     read -p "Press Enter to return..."
 }
 
@@ -1063,8 +1386,10 @@ setup_cron() {
         fi
     fi
 
-    # Clean old jobs
-    crontab -l 2>/dev/null | grep -v "zivpn.sh" > /tmp/cron_zivpn
+    # Clean old jobs - hapus semua entry zivpn (semua varian path) untuk hindari duplikasi
+    crontab -l 2>/dev/null \
+        | grep -v -E "(zivpn\.sh|/usr/local/bin/zivpn|/usr/bin/zivpn)( |$)" \
+        > /tmp/cron_zivpn
     
     # 1. Check expired every minute (for trial accuracy)
     echo "* * * * * $script_path xp" >> /tmp/cron_zivpn
@@ -1181,6 +1506,8 @@ check_expired_cron() {
     local now=$(date +%s)
     local tmp_db="$USER_DB.tmp"
     local removed_file="$USER_DB.removed"
+
+    db_lock
     rm -f "$tmp_db" "$removed_file"
     : > "$tmp_db"  # pastikan file ada meski kosong
 
@@ -1206,6 +1533,7 @@ check_expired_cron() {
 
     if [ "$old_lines" -ne "$new_lines" ]; then
         mv "$tmp_db" "$USER_DB"
+        db_unlock
         # Jika ada yang dihapus, reload config & restart service
         update_config
 
@@ -1225,6 +1553,7 @@ check_expired_cron() {
         fi
     else
         rm -f "$tmp_db"
+        db_unlock
     fi
     rm -f "$removed_file"
 }
@@ -1388,6 +1717,7 @@ case $1 in
     add) add_user "$2" "$3" "$4" ;;
     trial) add_trial "$2" "$3" ;;
     del) del_user "$2" ;;
+    del_api) ZIVPN_API_MODE=1 del_user "$2" ;;
     renew) renew_user "$2" "$3" ;;
     passwd|chpass|changepass) change_password "$2" "$3" ;;
     list|info) check_user ;;
