@@ -26,7 +26,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
   <br>
   https://zidstore.net<br>
   <br> 
-  Instant Login with Google Account. Bisa order kapan saja 24/7. Top Up Instan.<br>
+  Login Instan dengan Google, Topup 24/7 Tanpa Biaya Admin Rp.0<br>
   <br>
   Paket Data yang Tersedia di Web :<br>
   XL Edukasi 15GB hanya 8K-an!, XL Conference 15GB hanya 11K-an!, XL Akrab Kuota s/d 163GB dan Bisa untuk AXIS, XL Circle Kuota s/d 84GB, XL Xtra Combo Plus 5GB / XCP 0KB + Bonus Kuota / Addon XCP 10-15GB, Masa Aktif All Operator, AXIS Data, By.U Data, TRI & INDOSAT Data & HiFi, Kuota s/d 500GB, dan banyak lagi<br>
