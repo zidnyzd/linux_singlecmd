@@ -22,9 +22,9 @@ cat << 'EOF' > /etc/fightertunnel.txt
   No MultiLogin<br>
   No Reshare Account<br>
   Melanggar? Delete Account<br><br>
-  Web Auto Order UDP ZIVPN, SSH WS, VMess, VLESS, Trojan. dan juga Tembak Paket Data dalam satu Website<br>
+  Web Auto Order UDP ZIVPN, SSH WS, VMess, VLESS, Trojan. dan juga Order Paket Data dalam satu Website<br>
   <br>
-  https://panel.zidstore.net<br>
+  https://zidstore.net<br>
   <br> 
   Instant Login with Google Account. Bisa order kapan saja 24/7. Top Up Instan.<br>
   <br>
