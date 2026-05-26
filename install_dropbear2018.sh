@@ -3,7 +3,7 @@ set -euo pipefail
 
 # === Konfigurasi ===
 VER="2018.76"
-URL="https://matt.ucc.asn.au/dropbear/releases/dropbear-${VER}.tar.bz2"
+URL="https://dropbear.nl/mirror/releases/dropbear-${VER}.tar.bz2"
 SRC_ROOT="/usr/local/src"
 SRC_DIR="${SRC_ROOT}/dropbear-${VER}"
 BIN_NEW="/usr/local/sbin/dropbear2018"
@@ -32,7 +32,7 @@ mkdir -p "${SRC_ROOT}" "${BACKUP_DIR}"
 cd "${SRC_ROOT}"
 
 echo "==> Mengunduh Dropbear ${VER}"
-curl -fL -o "dropbear-${VER}.tar.bz2" "${URL}"
+curl -fL --retry 3 --retry-delay 2 -o "dropbear-${VER}.tar.bz2" "${URL}"
 
 echo "==> Mengekstrak sumber"
 rm -rf "${SRC_DIR}"
