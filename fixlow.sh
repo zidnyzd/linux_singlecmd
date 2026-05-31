@@ -25,13 +25,4 @@ sleep 2
 systemctl restart cron
 echo "Done Remove Auto Reboot"
 
-# fix kernel
-mv /var/lib/dpkg/info/linux-image-unsigned-7.0.2-070002-generic.postrm \
-   /var/lib/dpkg/info/linux-image-unsigned-7.0.2-070002-generic.postrm.bak
-sleep 2
-dpkg --remove --force-remove-reinstreq linux-image-unsigned-7.0.2-070002-generic
-apt --fix-broken install -y
-echo "Done Remove Kernel 7.0.2-070002-generic"
-sleep 2
-
 echo "Script Done, Server now should be more lighter"
