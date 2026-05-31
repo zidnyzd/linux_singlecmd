@@ -12,79 +12,85 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    rm -f repo.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/repo.sh && chmod +x repo.sh && ./repo.sh
    ```
 
-2. **Kernel Management Tool**  
+2. **Conntrack Optimize**  
+   Optimasi conntrack Linux untuk meningkatkan performa firewall dan konektivitas.
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/conntrack-optimize.sh && chmod +x conntrack-optimize.sh && ./conntrack-optimize.sh
+   ```
+
+3. **Kernel Management Tool**  
    Manajemen kernel Linux  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_kernel.sh && chmod +x fix_kernel.sh && ./fix_kernel.sh
    ```
 
-3. **XRAY Fix**  
+4. **XRAY Fix**  
    Perbaikan layanan XRAY  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_xray.sh && chmod +x fix_xray.sh && ./fix_xray.sh
    ```
 
-4. **Haproxy Fix**  
+5. **Haproxy Fix**  
    Perbaikan layanan Haproxy  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_haproxy.sh && chmod +x fix_haproxy.sh && ./fix_haproxy.sh
    ```
 
-5. **WebSocket Fix**  
+6. **WebSocket Fix**  
    Perbaikan layanan WebSocket & Auto Restart  
    ```bash
    rm -f fix_ws.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fix_ws.sh && chmod +x fix_ws.sh && ./fix_ws.sh
    ```
 
-6. **Install Dropbear 2018**  
+7. **Install Dropbear 2018**  
    Downgrade Dropbear
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_dropbear2018.sh && chmod +x install_dropbear2018.sh && ./install_dropbear2018.sh
    ```
 
-7. **FIX DPKG Debian Exim**  
+8. **FIX DPKG Debian Exim**  
    FIX APT BROKEN 
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/errordpkg.sh && chmod +x errordpkg.sh && ./errordpkg.sh
    ```
 
-8. **SSH Banner Update**  
+9. **SSH Banner Update**  
    Update banner SSH  
    ```bash
    rm -f banner.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
    ```
 
-9. **API**  
+10. **API**  
    Update API
    ```bash
    rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh && chmod +x api.sh && ./api.sh
    ```
 
-10. **Quota Usage Reset**  
+11. **Quota Usage Reset**  
    Reset penggunaan kuota
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
    ```
 
-11. **Disable DNSTT Auto Reboot**  
+12. **Disable DNSTT Auto Reboot**  
    Reset penggunaan kuota
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
    ```
 
-12. **Hostname & Expired Auto Shutdown**  
+13. **Hostname & Expired Auto Shutdown**  
    Atur hostname VPS dan jadwalkan auto-shutdown saat tanggal expired (format DD-MM-YYYY). MOTD login menampilkan sisa hari aktif agar user tahu kapan VPS expired.
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/hostname_expire.sh && chmod +x hostname_expire.sh && ./hostname_expire.sh
    ```
 
-13. **Fail2Ban Installation**  
+14. **Fail2Ban Installation**  
    Blokir serangan brute force SSH  
    ```bash
    rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
    ```
 
-14. **Gotop Installation**  
+15. **Gotop Installation**  
    System monitor interaktif  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
