@@ -5,41 +5,19 @@ rm -f /etc/fightertunnel.txt
 
 # Buat ulang dengan konten baru
 cat << 'EOF' > /etc/fightertunnel.txt
-<h2 style="text-align:center;">
-  <font color="#ff0000">Z</font>
-  <font color="#ff0000">I</font>
-  <font color="#ff0000">D</font>
-  <font color="#FFFFFF">S</font>
-  <font color="#FFFFFF">T</font>
-  <font color="#FFFFFF">O</font>
-  <font color="#FFFFFF">R</font>
-  <font color="#FFFFFF">E</font>
-</h2>
-<br>
-<h3 style="text-align:center;"><font color="white">Server Rules :</font></h3>
-<div style="text-align:center;">
-  <font color="white">No Torrent<br>
-  No MultiLogin<br>
-  No Reshare Account<br>
-  Melanggar? Delete Account<br><br>
-  Web Auto Order UDP ZIVPN, SSH WS, VMess, VLESS, Trojan. dan juga Order Paket Data dalam satu Website<br>
-  <br>
-  https://zidstore.net<br>
-  <br> 
-  Login Instan dengan Google, Topup 24/7 Tanpa Biaya Admin Rp.0<br>
-  <br>
-  Paket Data yang Tersedia di Web :<br>
-  XL Edukasi 15GB hanya 8K-an!, XL Conference 15GB hanya 11K-an!, XL Akrab Kuota s/d 163GB dan Bisa untuk AXIS, XL Circle Kuota s/d 84GB, XL Xtra Combo Plus 5GB / XCP 0KB + Bonus Kuota / Addon XCP 10-15GB, Masa Aktif All Operator, AXIS Data, By.U Data, TRI & INDOSAT Data & HiFi, Kuota s/d 500GB, dan banyak lagi<br>
-  <br>
-  <b>OTHER SERVICES:</b><br>
-  VPS Unlimited Bandwidth: https://t.me/zidstorevpn/16<br>
-  <br><b>CONTACT US:</b><br>
-  Telegram: https://t.me/storezid2<br>
-  Telegram Channel: https://t.me/zidstorevpn<br>
-  Whatsapp: https://wa.me/+6285184673439<br>
-  Whatsapp Channel: https://whatsapp.com/channel/0029Vb7SCT4A2pLI7JkFKN2w<br><br>
-  </font>
-</div>
+\e[1;36m╔══════════════════════════════════════════════════════╗\e[0m
+\e[1;36m║\e[0m  \e[1;31mZ I D S T O R E . N E T\e[0m — \e[1;33mPremium Tunneling\e[0m        \e[1;36m║\e[0m
+\e[1;36m╠══════════════════════════════════════════════════════╣\e[0m
+\e[1;36m║\e[0m  \e[1;32mWeb Order :\e[0m  https://zidstore.net                  \e[1;36m║\e[0m
+\e[1;36m║\e[0m  \e[1;34mTelegram  :\e[0m  @storezid2                            \e[1;36m║\e[0m
+\e[1;36m║\e[0m  \e[1;35mWhatsApp  :\e[0m  +62 851-8467-3439                    \e[1;36m║\e[0m
+\e[1;36m╠══════════════════════════════════════════════════════╣\e[0m
+\e[1;36m║\e[0m  \e[1;37mProduk:\e[0m SSH WS • VMess • VLESS • Trojan           \e[1;36m║\e[0m
+\e[1;36m║\e[0m  \e[1;37mPulsa & Paket Data:\e[0m XL • AXIS • TRI • Indosat     \e[1;36m║\e[0m
+\e[1;36m║\e[0m  \e[1;37mTopup 24/7\e[0m — Login Google — Tanpa Biaya Admin Rp.0 \e[1;36m║\e[0m
+\e[1;36m╠══════════════════════════════════════════════════════╣\e[0m
+\e[1;36m║\e[0m  \e[1;31m⚠  No Torrent / No MultiLogin / No Reshare\e[0m        \e[1;36m║\e[0m
+\e[1;36m╚══════════════════════════════════════════════════════╝\e[0m
 EOF
 
 systemctl restart dropbear
