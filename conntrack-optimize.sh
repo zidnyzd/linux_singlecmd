@@ -46,4 +46,3 @@ free -h
 
 echo
 echo "Selesai. Setting akan tetap persisten setelah reboot."
-</content>
