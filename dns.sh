@@ -42,7 +42,7 @@ show_header() {
   echo -e "${BOLD}${BLUE}╠══════════════════════════════════════════════════════════════════╣${NC}"
   echo -e "${BOLD}${BLUE}║  ${WHITE}1. Google DNS (8.8.8.8, 8.8.4.4)                                 ${BLUE}║${NC}"
   echo -e "${BOLD}${BLUE}║  ${WHITE}2. Cloudflare DNS (1.1.1.1, 1.0.0.1)                            ${BLUE}║${NC}"
-  echo -e "${BOLD}${BLUE}║  ${WHITE}3. PAN-IX/DPI DNS (202.46.46.2, 202.46.46.3)                    ${BLUE}║${NC}"
+  echo -e "${BOLD}${BLUE}║  ${WHITE}3. PANDI-ID DNS (103.88.88.88, 103.88.88.89)                    ${BLUE}║${NC}"
   echo -e "${BOLD}${BLUE}║  ${WHITE}4. OpenDNS (208.67.222.222, 208.67.220.220)                   ${BLUE}║${NC}"
   echo -e "${BOLD}${BLUE}║  ${WHITE}5. Custom DNS (Enter manually)                                  ${BLUE}║${NC}"
   echo -e "${BOLD}${BLUE}║  ${WHITE}6. Reset to Default (Remove custom DNS)                         ${BLUE}║${NC}"
@@ -58,7 +58,7 @@ show_header() {
 declare -A DNS_SERVERS
 DNS_SERVERS["google"]="8.8.8.8,8.8.4.4"
 DNS_SERVERS["cloudflare"]="1.1.1.1,1.0.0.1"
-DNS_SERVERS["pdn"]="202.46.46.2,202.46.46.3"
+DNS_SERVERS["pdn"]="103.88.88.88,103.88.88.89"
 DNS_SERVERS["opendns"]="208.67.222.222,208.67.220.220"
 DNS_NAMES["google"]="Google DNS"
 DNS_NAMES["cloudflare"]="Cloudflare DNS"
