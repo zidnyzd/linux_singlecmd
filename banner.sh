@@ -15,7 +15,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
     • Login Instan Google | Topup Otomatis 24/7 Biaya Admin Rp.0.<br>
     <br>
     <b>📦 PAKET DATA POPULER:</b><br>
-    XL Edukasi 15GB (8K-an!), XL Conference 15GB (10K-an!), XL iFlix 14GB (13K-an!),<br>
+    XL Edukasi 15GB (8K-an!), XL Conference 15GB (11K-an!), XL Xtra Kuota / iFlix 14GB (12K-an!),<br>
     XL Akrab & XL Circle, AXIS, By.U, Tri, Indosat, & banyak lagi!<br>
     <br>
     <b>🖥️ OTHER SERVICES:</b><br>
