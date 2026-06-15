@@ -13,6 +13,8 @@ cat << 'EOF' > /etc/fightertunnel.txt
   <font color="#ffffff">
     • Web Auto Order SSH WS, VMess, VLESS, Trojan, Pulsa, & Paket Data.<br>
     • Login Instan Google | Topup Otomatis 24/7 Biaya Admin Rp.0.<br>
+    • Pilih Paket - SCAN QRIS - Paket Masuk Otomatis.<br>
+    • Tanpa Perlu Topup Saldo Web.<br>
     <br>
     <b>📦 PAKET DATA POPULER:</b><br>
     XL Edukasi 15GB (8K-an!), XL Conference 15GB (11K-an!), XL Xtra Kuota / iFlix 14GB (12K-an!),<br>
