@@ -35,6 +35,14 @@ deb http://deb.debian.org/debian/ bookworm-backports main contrib non-free non-f
 deb http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
 EOF
                 ;;
+            trixie)
+                cat <<EOF > /etc/apt/sources.list
+deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian/ trixie-updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian/ trixie-backports main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware
+EOF
+                ;;
         esac
     elif [[ "$DISTRO" == "ubuntu" ]]; then
         case "$VERSION" in
@@ -95,6 +103,14 @@ deb http://kartolo.sby.datautama.net.id/debian/ bookworm-updates contrib main no
 deb http://kartolo.sby.datautama.net.id/debian/ bookworm-proposed-updates contrib main non-free non-free-firmware
 deb http://kartolo.sby.datautama.net.id/debian/ bookworm-backports contrib main non-free non-free-firmware
 deb http://kartolo.sby.datautama.net.id/debian-security/ bookworm-security contrib main non-free non-free-firmware
+EOF
+        elif [[ "$VERSION" == "trixie" ]]; then
+            cat <<EOF > /etc/apt/sources.list
+deb http://kartolo.sby.datautama.net.id/debian/ trixie contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ trixie-updates contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ trixie-proposed-updates contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian/ trixie-backports contrib main non-free non-free-firmware
+deb http://kartolo.sby.datautama.net.id/debian-security/ trixie-security contrib main non-free non-free-firmware
 EOF
         elif [[ "$VERSION" == "buster" ]]; then
             cat <<EOF > /etc/apt/sources.list
