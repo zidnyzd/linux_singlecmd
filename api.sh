@@ -99,10 +99,14 @@ function buildTrialResponse(type, pairs, defaults = {}) {
     if (!username) {
       throw new Error('Tidak menemukan Username pada output trial VMess');
     }
+    const uuid = ensure(['User ID', 'UUID'], '');
+    if (!uuid) {
+      throw new Error('Tidak menemukan UUID pada output trial VMess');
+    }
     return {
       username,
       expired: ensure(['Expires On', 'Expired', 'Expiry'], defaults.expired || ''),
-      uuid: ensure(['User ID', 'UUID'], ''),
+      uuid,
       quota: ensure(['Quota'], 'Unlimited'),
       ip_limit: ensure(['IP Limit'], '1'),
       domain: ensure(['Host Server', 'Host', 'Domain'], ''),
@@ -120,11 +124,14 @@ function buildTrialResponse(type, pairs, defaults = {}) {
     if (!username) {
       throw new Error('Tidak menemukan Username pada output trial VLESS');
     }
+    const uuid = ensure(['User ID', 'UUID'], '');
+    if (!uuid) {
+      throw new Error('Tidak menemukan UUID pada output trial VLESS');
+    }
     return {
       username,
       expired: ensure(['Expires On', 'Expired', 'Expiry'], defaults.expired || ''),
-      expired: ensure(['Expires On', 'Expired', 'Expiry'], defaults.expired || ''),
-      uuid: ensure(['User ID', 'UUID'], ''),
+      uuid,
       quota: ensure(['Quota'], 'Unlimited'),
       ip_limit: ensure(['IP Limit'], '1'),
       domain: ensure(['Host Server', 'Host', 'Domain'], ''),
@@ -142,10 +149,14 @@ function buildTrialResponse(type, pairs, defaults = {}) {
     if (!username) {
       throw new Error('Tidak menemukan Username pada output trial Trojan');
     }
+    const uuid = ensure(['User ID', 'UUID'], '');
+    if (!uuid) {
+      throw new Error('Tidak menemukan UUID pada output trial Trojan');
+    }
     return {
       username,
       expired: ensure(['Expires On', 'Expired', 'Expiry'], defaults.expired || ''),
-      uuid: ensure(['User ID', 'UUID'], ''),
+      uuid,
       quota: ensure(['Quota'], 'Unlimited'),
       ip_limit: ensure(['IP Limit'], '1'),
       domain: ensure(['Host Server', 'Host', 'Domain'], ''),
@@ -162,9 +173,13 @@ function buildTrialResponse(type, pairs, defaults = {}) {
     if (!username) {
       throw new Error('Tidak menemukan Username pada output trial SSH');
     }
+    const password = ensure(['Password', 'Pass'], '');
+    if (!password) {
+      throw new Error('Tidak menemukan Password pada output trial SSH');
+    }
     return {
       username,
-      password: ensure(['Password', 'Pass'], ''),
+      password,
       expired: ensure(['Expires On', 'Expired', 'Expiry'], defaults.expired || ''),
       ip_limit: ensure(['IP Limit'], '1'),
       domain: ensure(['Domain', 'Host Server', 'Host'], ''),
@@ -239,6 +254,14 @@ function postProcessTrialData(type, data, pairs = {}, options = {}) {
         }
       } catch (_) {}
     }
+  }
+
+  // Validasi field kritis — kalau kosong, anggap gagal
+  if (type === 'ssh' && !data.password) {
+    throw new Error('SSH password tidak ditemukan pada output script');
+  }
+  if ((type === 'vmess' || type === 'vless' || type === 'trojan') && !data.uuid) {
+    throw new Error('UUID tidak ditemukan pada output script');
   }
 
   return data;
