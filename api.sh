@@ -149,9 +149,9 @@ function buildTrialResponse(type, pairs, defaults = {}) {
     if (!username) {
       throw new Error('Tidak menemukan Username pada output trial Trojan');
     }
-    const uuid = ensure(['User ID', 'UUID'], '');
+    const uuid = ensure(['Password', 'UUID', 'User ID'], '');
     if (!uuid) {
-      throw new Error('Tidak menemukan UUID pada output trial Trojan');
+      throw new Error('Tidak menemukan Password pada output trial Trojan');
     }
     return {
       username,
@@ -260,8 +260,11 @@ function postProcessTrialData(type, data, pairs = {}, options = {}) {
   if (type === 'ssh' && !data.password) {
     throw new Error('SSH password tidak ditemukan pada output script');
   }
-  if ((type === 'vmess' || type === 'vless' || type === 'trojan') && !data.uuid) {
+  if ((type === 'vmess' || type === 'vless') && !data.uuid) {
     throw new Error('UUID tidak ditemukan pada output script');
+  }
+  if (type === 'trojan' && !data.uuid) {
+    throw new Error('Password tidak ditemukan pada output script Trojan');
   }
 
   return data;
