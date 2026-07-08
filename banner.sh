@@ -20,6 +20,7 @@ cat << 'EOF' > /etc/fightertunnel.txt
     <br>
     <b>📦 PAKET DATA POPULER:</b><br>
     XL Edukasi 15GB (8K-an!), XL Conference 15GB (11K-an!), XL Xtra Kuota / iFlix 14GB (12K-an!),<br>
+    Telkomsel Ilmupedia 22GB (14K-an!)<br>
     XL Akrab & XL Circle, AXIS, By.U, Tri, Indosat, & banyak lagi!<br>
     <br>
     <b>🖥️ OTHER SERVICES:</b><br>

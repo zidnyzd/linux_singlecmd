@@ -60,37 +60,58 @@ Urutan prioritas utama untuk manajemen dan perbaikan server:
    rm -f banner.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner.sh && chmod +x banner.sh && ./banner.sh
    ```
 
-10. **API**  
+10. **SSH Banner Update v2 (ZidStore)**  
+   Update banner SSH dengan konten ZidStore  
+   ```bash
+   rm -f banner2.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner2.sh && chmod +x banner2.sh && ./banner2.sh
+   ```
+
+11. **Dropbear MAX_BANNER_SIZE Patcher**  
+   Patch langsung di binary dropbear untuk memperbesar MAX_BANNER_SIZE tanpa rebuild dari source.  
+   Script ini mencari format string error, menemukan lokasi CMP & MOV instruction, lalu mengganti nilai 2000 -> custom (default 5000).  
+   Fitur: auto-detect nilai lama, backup otomatis, safety check, restore dari backup.  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/dropbear_banner_patch.sh && chmod +x dropbear_banner_patch.sh && ./dropbear_banner_patch.sh 5000
+   ```
+
+12. **Dropbear Rebuild Banner Size**  
+   Rebuild dropbear dari source dengan MAX_BANNER_SIZE kustom.  
+   Cocok jika patch binary tidak berfungsi (beda arsitektur/versi).  
+   ```bash
+   wget https://raw.githubusercontent.com/zidnyzd/linux/main/banner_limit.sh && chmod +x banner_limit.sh && ./banner_limit.sh 5000
+   ```
+
+13. **API**  
    Update API
    ```bash
    rm -f api.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/api.sh && chmod +x api.sh && ./api.sh
    ```
 
-11. **Quota Usage Reset**  
+14. **Quota Usage Reset**  
    Reset penggunaan kuota
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/install_reset_usage.sh && chmod +x install_reset_usage.sh && ./install_reset_usage.sh
    ```
 
-12. **Disable DNSTT Auto Reboot**  
+15. **Disable DNSTT Auto Reboot**  
    Reset penggunaan kuota
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/fixlow.sh && chmod +x fixlow.sh && ./fixlow.sh
    ```
 
-13. **Hostname & Expired Auto Shutdown**  
+16. **Hostname & Expired Auto Shutdown**  
    Atur hostname VPS dan jadwalkan auto-shutdown saat tanggal expired (format DD-MM-YYYY). MOTD login menampilkan sisa hari aktif agar user tahu kapan VPS expired.
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/hostname_expire.sh && chmod +x hostname_expire.sh && ./hostname_expire.sh
    ```
 
-14. **Fail2Ban Installation**  
+17. **Fail2Ban Installation**  
    Blokir serangan brute force SSH  
    ```bash
    rm -f fail2ban.sh && wget https://raw.githubusercontent.com/zidnyzd/linux/main/fail2ban.sh && chmod +x fail2ban.sh && ./fail2ban.sh
    ```
 
-15. **Gotop Installation**  
+18. **Gotop Installation**  
    System monitor interaktif  
    ```bash
    wget https://raw.githubusercontent.com/zidnyzd/linux/main/gotop.sh && chmod +x gotop.sh && ./gotop.sh
